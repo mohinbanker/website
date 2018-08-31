@@ -1,0 +1,3871 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.48" />
+
+
+<title>Twitter Analysis - Mohin Banker</title>
+<meta property="og:title" content="Twitter Analysis - Mohin Banker">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/mohinbanker">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">40 min read</span>
+    
+
+    <h1 class="article-title">Twitter Analysis</h1>
+
+    
+    <span class="article-date">2018/08/30</span>
+    
+
+    <div class="article-content">
+      <div id="cleaning-data" class="section level2">
+<h2>Cleaning Data</h2>
+<p>First, we read in the data and clean date-times and classify datatypes. Before, I mapped Unicode hex codes to emojis and symbols, but now realize that having these values isn’t very useful. Therefore, we remove all unrecognized symbols.</p>
+<p>Previously, I was replacing hex codes with their corresponding emojis. Credit to Kate Lyons and Jessica Peterka-Bonetta for developing a free dictionary for translating Unicode to emojis. Unfortunately, the literature on using emojis in sentiment analyses is sparse and unexplored. Emojis were generally used frequently (about 1/8 of tweets had some kind of emoji or symbol), but no single emoji was used with extreme frequency. Further analysis would involve coding obvious emojis to their corresponding sentiments (e.g. laughter, love, or heart emojis coded to positive sentiments).</p>
+<pre><code>## Input contains no \n. Taking this to be a filename to open
+## File opened, filesize is 0.236283 GB.
+## Memory mapping ... ok
+## Detected eol as \n only (no \r afterwards), the UNIX and Mac standard.
+## Positioned on line 3 after skip or autostart
+## This line isn&#39;t blank and skip&gt;0 so we&#39;re done
+## Detecting sep ... &#39;,&#39;
+## Detected 19 columns. Longest stretch was from line 3 to line 32
+## Starting data input on line 3 (either column names or first row of data). First 10 characters: &quot;2&quot;,1,NA,&quot;
+## The line before starting line 3 is non-empty and will be ignored (it has too few or too many items to be column names or data): &quot;1&quot;,NA,&quot;V1&quot;,&quot;V2&quot;,&quot;V3&quot;,&quot;V4&quot;,&quot;V5&quot;,&quot;V6&quot;,&quot;V7&quot;,&quot;V8&quot;,&quot;V9&quot;,&quot;V10&quot;,&quot;V11&quot;,&quot;V12&quot;,&quot;V13&quot;,&quot;V14&quot;,&quot;V15&quot;,&quot;V16&quot;,&quot;V17&quot;&#39;header&#39; changed by user from &#39;auto&#39; to TRUE
+## nrow set to nrows passed in (753804)
+## Type codes (point  0): 4144444444444444400
+## Type codes (point  1): 4144444444444444400
+## Type codes (point  2): 4144444444444444400
+## Type codes (point  3): 4144444444444444400
+## Type codes (point  4): 4144444444444444400
+## Type codes (point  5): 4144444444444444400
+## Type codes (point  6): 4144444444444444400
+## Type codes (point  7): 4144444444444444400
+## Type codes (point  8): 4144444444444444400
+## Type codes (point  9): 4144444444444444400
+## Type codes (point 10): 4144444444444444400
+## Column 18 (&#39;longitude&#39;) was detected as type &#39;logical&#39; but bumped to &#39;character&#39; as requested by colClasses
+## Column 19 (&#39;latitude&#39;) was detected as type &#39;logical&#39; but bumped to &#39;character&#39; as requested by colClasses
+## Type codes: 4144444444444444444 (after applying colClasses and integer64)
+## Type codes: 4144444444444444444 (after applying drop or select (if supplied)
+## Allocating 19 column slots (19 - 0 dropped)
+## 
+Read 8.0% of 753804 rows
+Read 19.9% of 753804 rows
+Read 35.8% of 753804 rows
+Read 37.1% of 753804 rows
+Read 49.1% of 753804 rows
+Read 59.7% of 753804 rows
+Read 78.3% of 753804 rows
+Read 87.6% of 753804 rows
+Read 92.9% of 753804 rows
+Read 753804 rows and 19 (of 19) columns from 0.236 GB file in 00:00:15
+## Read 753804 rows. Exactly what was estimated and allocated up front
+##    0.000s (  0%) Memory map (rerun may be quicker)
+##    0.001s (  0%) sep and header detection
+##    0.000s (  0%) Count rows (wc -l)
+##    0.005s (  0%) Column type detection (100 rows at 10 points)
+##    1.113s (  8%) Allocation of 753804x19 result (xMB) in RAM
+##   13.535s ( 92%) Reading data
+##    0.000s (  0%) Allocation for type bumps (if any), including gc time if triggered
+##    0.000s (  0%) Coercing data already read in type bumps (if any)
+##    0.031s (  0%) Changing na.strings to NA
+##   14.685s        Total</code></pre>
+</div>
+<div id="exploratory-analysis" class="section level2">
+<h2>Exploratory Analysis</h2>
+<p>Next, we want to familiarize ourselves with how our data look.</p>
+<p>We see that we have about 750k observations (individual tweets), and 28 variables.</p>
+<p>Looking at individual columns, there are a few interesting variables. The richest variable is <code>text</code>, which contains the actual text of the tweets. Then we have the Twitter handle that authored the tweet, the account the tweet is replying to, metrics like favorites and retweets, and administrative variables like time and location of the tweet’s origination. All other variables are either superfluous or not useful.</p>
+<pre><code>## Observations: 753,804
+## Variables: 29
+## $ idx1          &lt;dbl&gt; 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,...
+## $ idx2          &lt;int&gt; 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ...
+## $ idx3          &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1...
+## $ text          &lt;chr&gt; &quot;@KristySwansonXO Like this one? https://t.co/Ll...
+## $ favorited     &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,...
+## $ favoriteCount &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...
+## $ replyToSN     &lt;chr&gt; &quot;KristySwansonXO&quot;, &quot;LapoBK&quot;, &quot;Lauramchapman&quot;, &quot;S...
+## $ created       &lt;dttm&gt; 2017-02-23 22:27:55, 2017-02-23 22:22:32, 2017-...
+## $ truncated     &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,...
+## $ replyToSID    &lt;chr&gt; &quot;834866636360392704&quot;, &quot;834871431162888192&quot;, &quot;834...
+## $ id            &lt;chr&gt; &quot;834892573365972995&quot;, &quot;834891215866851328&quot;, &quot;834...
+## $ replyToUID    &lt;chr&gt; &quot;45033456&quot;, &quot;2373874716&quot;, &quot;34731404&quot;, &quot;228760178...
+## $ statusSource  &lt;chr&gt; &quot;&lt;a href=\&quot;\&quot;http://twitter.com\&quot;\&quot; rel=\&quot;\&quot;nofo...
+## $ screenName    &lt;chr&gt; &quot;WholeFoods&quot;, &quot;WholeFoods&quot;, &quot;WholeFoods&quot;, &quot;Whole...
+## $ retweetCount  &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...
+## $ isRetweet     &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,...
+## $ retweeted     &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,...
+## $ longitude     &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, ...
+## $ latitude      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, ...
+## $ isReply       &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, ...
+## $ date          &lt;date&gt; 2017-02-23, 2017-02-23, 2017-02-23, 2017-02-23,...
+## $ time          &lt;chr&gt; &quot;22:27:55&quot;, &quot;22:22:32&quot;, &quot;22:21:44&quot;, &quot;21:54:11&quot;, ...
+## $ year          &lt;dbl&gt; 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, ...
+## $ month         &lt;dbl&gt; 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...
+## $ day           &lt;dbl&gt; 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, ...
+## $ hour          &lt;dbl&gt; 22, 22, 22, 21, 21, 21, 21, 21, 21, 21, 21, 21, ...
+## $ minute        &lt;dbl&gt; 27, 22, 21, 54, 43, 43, 43, 43, 43, 40, 39, 38, ...
+## $ second        &lt;dbl&gt; 55, 32, 44, 11, 42, 3, 3, 3, 2, 3, 3, 41, 3, 31,...
+## $ website       &lt;chr&gt; &quot;Twitter Web Client&quot;, &quot;Spredfast&quot;, &quot;Spredfast&quot;, ...</code></pre>
+<p>The following is a tabulation of the number of unique variables each variables takes. We see that there are 115 unique companies. Additionally, all the date and time variables are correctly coded. It’s unclear what <code>idx2</code> and <code>idx3</code> are supposed to represent. The boolean variables <code>favorited</code> and <code>retweeted</code> are incorrectly coded. Assumedly, we only have non-retweets in our sample because there is a single unique value for <code>isRetweet</code>.</p>
+<pre><code>##     idx1   idx2 idx3   text favorited favoriteCount replyToSN created
+## 1 753804 196284 3200 709979         1          5565    413242  711658
+##   truncated replyToSID     id replyToUID statusSource screenName
+## 1         2     559879 753804     413585          108        115
+##   retweetCount isRetweet retweeted longitude latitude isReply date  time
+## 1         3144         1         1        24       24       2 1898 82239
+##   year month day hour minute second website
+## 1    8    12  31   24     60     60     108</code></pre>
+<p>We also want to see the shape of the distributions of our continuous variables. Both favorites and retweets are extremely right skewed, which is to be expected. After log transforming both variables along with log transforming y-axes, there is a quasi-linear relationship as each variables increases and observed frequencies. We split tweets by whether they are a reply or not, because replies are not visible on Twitter feeds to followers.</p>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<p>Looking at the frequency of tweets over time, there seems to be an interesting spike in tweet frequency at the beginning of 2017. There isn’t a clear explanation for this observation, especially since there aren’t any spikes as similar times during other years. Otherwise, the distribution is expectedly left-skewed as companies increase social media interactions over time.</p>
+<p>The second graph shows a distribution of tweet frequencies over time by individual companies. There are stark differences in behavior. Some companies maintain high frequency of tweets, while other keep low frequencies of tweets. Other companies gradually increase tweeting, while another group tweets less predictably and tweets with high frequency every so often.</p>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-4-1.png" width="672" /><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p>As for locational data, most companies don’t disclose their location when tweeting. We only find 26 observations that have a location, which makes the data useless.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">screenName</th>
+<th align="right">locationTweets</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">corona</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">gucci</td>
+<td align="right">23</td>
+</tr>
+<tr class="odd">
+<td align="left">Lexus</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<p>Our dataset also provides the platform source of the screenName’s tweet. David Robinson did a <a href="http://varianceexplained.org/r/trump-tweets/">very interesting text analysis</a> demonstrating why a tweet’s source can be informative. There are a large variety of platforms used, but a large proportion use third-party platforms like Sprinklr, Lithium, Radian6, or Spredfast to manage general customer experience across social media sites.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">website</th>
+<th align="right">source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="right">159039</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="right">83157</td>
+</tr>
+<tr class="odd">
+<td align="left">Lithium Tech.</td>
+<td align="right">76180</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="right">64310</td>
+</tr>
+<tr class="odd">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="right">44266</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast</td>
+<td align="right">32990</td>
+</tr>
+<tr class="odd">
+<td align="left">Lithium Tech</td>
+<td align="right">30417</td>
+</tr>
+<tr class="even">
+<td align="left">TweetDeck</td>
+<td align="right">29119</td>
+</tr>
+<tr class="odd">
+<td align="left">Sparkcentral.com</td>
+<td align="right">28896</td>
+</tr>
+<tr class="even">
+<td align="left">LiveWorld Inc</td>
+<td align="right">20212</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr Prod2</td>
+<td align="right">20063</td>
+</tr>
+<tr class="even">
+<td align="left">Conversocial</td>
+<td align="right">19726</td>
+</tr>
+<tr class="odd">
+<td align="left">Hootsuite</td>
+<td align="right">15100</td>
+</tr>
+<tr class="even">
+<td align="left">Oracle Engage</td>
+<td align="right">12493</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter for iPhone</td>
+<td align="right">11177</td>
+</tr>
+<tr class="even">
+<td align="left">BIG Connect 2</td>
+<td align="right">9729</td>
+</tr>
+<tr class="odd">
+<td align="left">Percolate</td>
+<td align="right">9664</td>
+</tr>
+<tr class="even">
+<td align="left">Wilke Global SMART</td>
+<td align="right">8365</td>
+</tr>
+<tr class="odd">
+<td align="left">Media Studio</td>
+<td align="right">7982</td>
+</tr>
+<tr class="even">
+<td align="left">Insightpool</td>
+<td align="right">5538</td>
+</tr>
+</tbody>
+</table>
+<p>We find each company’s most frequently used method of tweeting. As a note, it might be interesting to look for differences in Twitter usage based on what platform the company uses to write tweets.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">website</th>
+<th align="left">screenName</th>
+<th align="right">source</th>
+<th align="right">sourcePercent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="left">Accenture</td>
+<td align="right">1183</td>
+<td align="right">0.7691808</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">adidasoriginals</td>
+<td align="right">3007</td>
+<td align="right">0.4681613</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">AEO</td>
+<td align="right">4175</td>
+<td align="right">0.7999617</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Allianz</td>
+<td align="right">599</td>
+<td align="right">0.5972084</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">amazon</td>
+<td align="right">3910</td>
+<td align="right">0.9453578</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">AmericanExpress</td>
+<td align="right">7633</td>
+<td align="right">0.7833539</td>
+</tr>
+<tr class="odd">
+<td align="left">Conversocial</td>
+<td align="left">Android</td>
+<td align="right">5067</td>
+<td align="right">0.8533176</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">ATT</td>
+<td align="right">9551</td>
+<td align="right">0.6404050</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">Audi</td>
+<td align="right">2743</td>
+<td align="right">0.9229475</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">BankofAmerica</td>
+<td align="right">310</td>
+<td align="right">0.5709024</td>
+</tr>
+<tr class="odd">
+<td align="left">Facelift Cloud</td>
+<td align="left">BASF</td>
+<td align="right">551</td>
+<td align="right">0.5375610</td>
+</tr>
+<tr class="even">
+<td align="left">Sprout Social</td>
+<td align="left">bbva</td>
+<td align="right">1743</td>
+<td align="right">0.4641811</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">BestBuy</td>
+<td align="right">8746</td>
+<td align="right">0.9366031</td>
+</tr>
+<tr class="even">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="left">BlackBerry</td>
+<td align="right">1180</td>
+<td align="right">0.9941028</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">BMW</td>
+<td align="right">5312</td>
+<td align="right">0.9977461</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Boeing</td>
+<td align="right">249</td>
+<td align="right">0.4715909</td>
+</tr>
+<tr class="odd">
+<td align="left">Earshot App</td>
+<td align="left">Budweiser</td>
+<td align="right">4417</td>
+<td align="right">0.5693478</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="left">Burberry</td>
+<td align="right">3836</td>
+<td align="right">0.6085025</td>
+</tr>
+<tr class="odd">
+<td align="left">Shoutlet API</td>
+<td align="left">CanonUSA</td>
+<td align="right">1645</td>
+<td align="right">0.6165667</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Cartier</td>
+<td align="right">916</td>
+<td align="right">0.4044150</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast</td>
+<td align="left">CaterpillarInc</td>
+<td align="right">3621</td>
+<td align="right">0.8490035</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">CHANEL</td>
+<td align="right">2583</td>
+<td align="right">0.8803681</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">Chase</td>
+<td align="right">847</td>
+<td align="right">0.4964830</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="left">chevrolet</td>
+<td align="right">1698</td>
+<td align="right">0.3714723</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">Cisco</td>
+<td align="right">1848</td>
+<td align="right">0.7914347</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">Citi</td>
+<td align="right">1061</td>
+<td align="right">0.9584463</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">Coach</td>
+<td align="right">205</td>
+<td align="right">0.4027505</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">CocaCola</td>
+<td align="right">16464</td>
+<td align="right">0.9867546</td>
+</tr>
+<tr class="odd">
+<td align="left">Social Relationship Management</td>
+<td align="left">Colgate</td>
+<td align="right">3217</td>
+<td align="right">0.8150494</td>
+</tr>
+<tr class="even">
+<td align="left">Percolate</td>
+<td align="left">corona</td>
+<td align="right">441</td>
+<td align="right">0.4900000</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">Costco</td>
+<td align="right">1425</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Danone</td>
+<td align="right">315</td>
+<td align="right">0.5000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Sparkcentral.com</td>
+<td align="left">Delta</td>
+<td align="right">28868</td>
+<td align="right">0.8178830</td>
+</tr>
+<tr class="even">
+<td align="left">Fan Experiences Platform</td>
+<td align="left">Disney</td>
+<td align="right">3121</td>
+<td align="right">0.6036750</td>
+</tr>
+<tr class="odd">
+<td align="left">SentimentMetrics.com</td>
+<td align="left">eBay</td>
+<td align="right">3166</td>
+<td align="right">0.6192059</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="left">espn</td>
+<td align="right">1664</td>
+<td align="right">0.9353569</td>
+</tr>
+<tr class="odd">
+<td align="left">Hootsuite</td>
+<td align="left">Etsy</td>
+<td align="right">1236</td>
+<td align="right">0.2831615</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="left">facebook</td>
+<td align="right">7303</td>
+<td align="right">0.9967244</td>
+</tr>
+<tr class="odd">
+<td align="left">LiveWorld Inc</td>
+<td align="left">FedEx</td>
+<td align="right">1234</td>
+<td align="right">0.3740527</td>
+</tr>
+<tr class="even">
+<td align="left">Buffer</td>
+<td align="left">Fendi</td>
+<td align="right">1354</td>
+<td align="right">0.4049043</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="left">Ford</td>
+<td align="right">10235</td>
+<td align="right">0.7030016</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">FoxNews</td>
+<td align="right">8051</td>
+<td align="right">0.5756471</td>
+</tr>
+<tr class="odd">
+<td align="left">Wilke Global SMART</td>
+<td align="left">Fritolay</td>
+<td align="right">7335</td>
+<td align="right">0.9602042</td>
+</tr>
+<tr class="even">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="left">Gap</td>
+<td align="right">6954</td>
+<td align="right">0.8924538</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="left">generalelectric</td>
+<td align="right">2085</td>
+<td align="right">0.6523780</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">Gillette</td>
+<td align="right">8411</td>
+<td align="right">0.9376812</td>
+</tr>
+<tr class="odd">
+<td align="left">Conversocial</td>
+<td align="left">Google</td>
+<td align="right">14654</td>
+<td align="right">0.8819741</td>
+</tr>
+<tr class="even">
+<td align="left">Hootsuite</td>
+<td align="left">gucci</td>
+<td align="right">2674</td>
+<td align="right">0.4045386</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="left">Heineken</td>
+<td align="right">3740</td>
+<td align="right">0.9216363</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Hermes_Paris</td>
+<td align="right">191</td>
+<td align="right">0.8642534</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="left">HersheyCompany</td>
+<td align="right">963</td>
+<td align="right">0.4017522</td>
+</tr>
+<tr class="even">
+<td align="left">Adobe® Social</td>
+<td align="left">hm</td>
+<td align="right">2055</td>
+<td align="right">0.6399875</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">HomeDepot</td>
+<td align="right">999</td>
+<td align="right">0.5715103</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">Honda</td>
+<td align="right">4950</td>
+<td align="right">0.8909287</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">HP</td>
+<td align="right">2214</td>
+<td align="right">0.8813694</td>
+</tr>
+<tr class="even">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="left">HSBC</td>
+<td align="right">723</td>
+<td align="right">0.5223988</td>
+</tr>
+<tr class="odd">
+<td align="left">Hyundai Publisher</td>
+<td align="left">Hyundai</td>
+<td align="right">2924</td>
+<td align="right">0.6017699</td>
+</tr>
+<tr class="even">
+<td align="left">Percolate</td>
+<td align="left">IBM</td>
+<td align="right">491</td>
+<td align="right">0.4459582</td>
+</tr>
+<tr class="odd">
+<td align="left">Percolate</td>
+<td align="left">IKEAUSA</td>
+<td align="right">2581</td>
+<td align="right">0.6996476</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="left">intel</td>
+<td align="right">3035</td>
+<td align="right">0.8731300</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast</td>
+<td align="left">JohnDeere</td>
+<td align="right">2318</td>
+<td align="right">0.9948498</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Ads</td>
+<td align="left">jpmorgan</td>
+<td align="right">422</td>
+<td align="right">0.3405973</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">KelloggsUS</td>
+<td align="right">668</td>
+<td align="right">0.3742297</td>
+</tr>
+<tr class="even">
+<td align="left">tracx platform</td>
+<td align="left">kraftfoods</td>
+<td align="right">876</td>
+<td align="right">0.6790698</td>
+</tr>
+<tr class="odd">
+<td align="left">Oracle Engage</td>
+<td align="left">LEGO_Group</td>
+<td align="right">12216</td>
+<td align="right">0.7919098</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="left">Lexus</td>
+<td align="right">6389</td>
+<td align="right">0.9416360</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">LOrealParisUSA</td>
+<td align="right">1062</td>
+<td align="right">0.3371429</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">LouisVuitton</td>
+<td align="right">2884</td>
+<td align="right">0.8103400</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="left">marcjacobs</td>
+<td align="right">663</td>
+<td align="right">0.4373351</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Mastercard</td>
+<td align="right">3972</td>
+<td align="right">0.8220199</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">McDonalds</td>
+<td align="right">34529</td>
+<td align="right">0.9974003</td>
+</tr>
+<tr class="even">
+<td align="left">BIG Connect 2</td>
+<td align="left">MercedesBenz</td>
+<td align="right">9729</td>
+<td align="right">0.7767045</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="left">Microsoft</td>
+<td align="right">158</td>
+<td align="right">0.3550562</td>
+</tr>
+<tr class="even">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="left">NESCAFE</td>
+<td align="right">6840</td>
+<td align="right">0.9757489</td>
+</tr>
+<tr class="odd">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="left">Nestle</td>
+<td align="right">1951</td>
+<td align="right">0.8937242</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">netflix</td>
+<td align="right">1268</td>
+<td align="right">0.6891304</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">Nike</td>
+<td align="right">8620</td>
+<td align="right">0.9879656</td>
+</tr>
+<tr class="even">
+<td align="left">Nissan North America</td>
+<td align="left">Nissan</td>
+<td align="right">562</td>
+<td align="right">0.4929825</td>
+</tr>
+<tr class="odd">
+<td align="left">TweetDeck</td>
+<td align="left">Oracle</td>
+<td align="right">300</td>
+<td align="right">0.4807692</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Pampers</td>
+<td align="right">1438</td>
+<td align="right">0.7416194</td>
+</tr>
+<tr class="odd">
+<td align="left">Buffer</td>
+<td align="left">panasonic</td>
+<td align="right">2097</td>
+<td align="right">0.9229754</td>
+</tr>
+<tr class="even">
+<td align="left">TweetDeck</td>
+<td align="left">pepsi</td>
+<td align="right">2072</td>
+<td align="right">0.3791400</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">Philips</td>
+<td align="right">331</td>
+<td align="right">0.5687285</td>
+</tr>
+<tr class="even">
+<td align="left">Sprout Social</td>
+<td align="left">PlayStation</td>
+<td align="right">945</td>
+<td align="right">0.3741093</td>
+</tr>
+<tr class="odd">
+<td align="left">Engagor</td>
+<td align="left">Porsche</td>
+<td align="right">659</td>
+<td align="right">0.5441784</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Prada</td>
+<td align="right">1590</td>
+<td align="right">0.5439617</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">RBC</td>
+<td align="right">433</td>
+<td align="right">0.3081851</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">redbull</td>
+<td align="right">6440</td>
+<td align="right">0.8587812</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="left">RockstarGames</td>
+<td align="right">311</td>
+<td align="right">0.6195219</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">SamsungMobile</td>
+<td align="right">776</td>
+<td align="right">0.5491861</td>
+</tr>
+<tr class="odd">
+<td align="left">TweetDeck</td>
+<td align="left">SamsungMobileUS</td>
+<td align="right">18262</td>
+<td align="right">0.9150215</td>
+</tr>
+<tr class="even">
+<td align="left">Hootsuite</td>
+<td align="left">SantanderBankUS</td>
+<td align="right">2541</td>
+<td align="right">0.7883959</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">SAP</td>
+<td align="right">5420</td>
+<td align="right">0.9886903</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Web Client</td>
+<td align="left">Siemens</td>
+<td align="right">320</td>
+<td align="right">0.4278075</td>
+</tr>
+<tr class="odd">
+<td align="left">TweetDeck</td>
+<td align="left">Sony</td>
+<td align="right">601</td>
+<td align="right">0.5980100</td>
+</tr>
+<tr class="even">
+<td align="left">Lithium Tech.</td>
+<td align="left">SouthwestAir</td>
+<td align="right">34805</td>
+<td align="right">0.9774214</td>
+</tr>
+<tr class="odd">
+<td align="left">Lithium Tech</td>
+<td align="left">Starbucks</td>
+<td align="right">30323</td>
+<td align="right">0.9919526</td>
+</tr>
+<tr class="even">
+<td align="left">QWVR</td>
+<td align="left">SUBWAY</td>
+<td align="right">2228</td>
+<td align="right">0.4401422</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast</td>
+<td align="left">Target</td>
+<td align="right">11612</td>
+<td align="right">0.9175095</td>
+</tr>
+<tr class="even">
+<td align="left">Adobe® Social</td>
+<td align="left">thomsonreuters</td>
+<td align="right">1096</td>
+<td align="right">0.9102990</td>
+</tr>
+<tr class="odd">
+<td align="left">Lithium Tech.</td>
+<td align="left">TMobile</td>
+<td align="right">33412</td>
+<td align="right">0.9860992</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">TOMS</td>
+<td align="right">6967</td>
+<td align="right">0.9395819</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">Toyota</td>
+<td align="right">2479</td>
+<td align="right">0.8443460</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast app</td>
+<td align="left">UniqloUSA</td>
+<td align="right">3071</td>
+<td align="right">0.4999186</td>
+</tr>
+<tr class="odd">
+<td align="left">Insightpool</td>
+<td align="left">UPS</td>
+<td align="right">5042</td>
+<td align="right">0.4518326</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr</td>
+<td align="left">verizon</td>
+<td align="right">11821</td>
+<td align="right">0.9332860</td>
+</tr>
+<tr class="odd">
+<td align="left">Spredfast app</td>
+<td align="left">VictoriasSecret</td>
+<td align="right">14614</td>
+<td align="right">0.9702563</td>
+</tr>
+<tr class="even">
+<td align="left">TweetDeck</td>
+<td align="left">Visa</td>
+<td align="right">2001</td>
+<td align="right">0.7480374</td>
+</tr>
+<tr class="odd">
+<td align="left">Desk.com</td>
+<td align="left">VW</td>
+<td align="right">2447</td>
+<td align="right">0.4572123</td>
+</tr>
+<tr class="even">
+<td align="left">LiveWorld Inc</td>
+<td align="left">Walmart</td>
+<td align="right">18978</td>
+<td align="right">0.9173877</td>
+</tr>
+<tr class="odd">
+<td align="left">Sprinklr</td>
+<td align="left">WellsFargo</td>
+<td align="right">1660</td>
+<td align="right">0.9051254</td>
+</tr>
+<tr class="even">
+<td align="left">Spredfast</td>
+<td align="left">WholeFoods</td>
+<td align="right">15416</td>
+<td align="right">0.8918716</td>
+</tr>
+<tr class="odd">
+<td align="left">Hootsuite</td>
+<td align="left">woot</td>
+<td align="right">2216</td>
+<td align="right">0.4104464</td>
+</tr>
+<tr class="even">
+<td align="left">Sprinklr Prod2</td>
+<td align="left">Xbox</td>
+<td align="right">20009</td>
+<td align="right">0.8231108</td>
+</tr>
+<tr class="odd">
+<td align="left">Radian6 -Social Media Management</td>
+<td align="left">ZARA</td>
+<td align="right">19803</td>
+<td align="right">0.9974312</td>
+</tr>
+</tbody>
+</table>
+<p>Now, we look at engagement on tweets through the number of favorites and retweets. Companies involved in entertainment and media like Netflix, ESPN, Disney, and Rockstar Games, which are especially popular with Twitter’s younger demographic, receive more favorites and retweets on average. Interestingly, Nike receives a lot of engagement with its tweets, likely because of how infrequently the screenName tweets, and how it markets with major sports icons.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">screenName</th>
+<th align="right">rts</th>
+<th align="right">favs</th>
+<th align="right">tweets</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Nike</td>
+<td align="right">2692.2961</td>
+<td align="right">5834.8092</td>
+<td align="right">152</td>
+</tr>
+<tr class="even">
+<td align="left">netflix</td>
+<td align="right">2101.7022</td>
+<td align="right">5970.8151</td>
+<td align="right">806</td>
+</tr>
+<tr class="odd">
+<td align="left">espn</td>
+<td align="right">1089.0677</td>
+<td align="right">3547.6199</td>
+<td align="right">1773</td>
+</tr>
+<tr class="even">
+<td align="left">Disney</td>
+<td align="right">1017.1439</td>
+<td align="right">2466.5818</td>
+<td align="right">1564</td>
+</tr>
+<tr class="odd">
+<td align="left">RockstarGames</td>
+<td align="right">927.0818</td>
+<td align="right">3289.0147</td>
+<td align="right">477</td>
+</tr>
+<tr class="even">
+<td align="left">CHANEL</td>
+<td align="right">834.8373</td>
+<td align="right">1455.0168</td>
+<td align="right">2913</td>
+</tr>
+<tr class="odd">
+<td align="left">Xbox</td>
+<td align="right">689.3293</td>
+<td align="right">1159.7535</td>
+<td align="right">1148</td>
+</tr>
+<tr class="even">
+<td align="left">adidasoriginals</td>
+<td align="right">571.8562</td>
+<td align="right">1579.3275</td>
+<td align="right">1252</td>
+</tr>
+<tr class="odd">
+<td align="left">Starbucks</td>
+<td align="right">541.1747</td>
+<td align="right">2172.5445</td>
+<td align="right">292</td>
+</tr>
+<tr class="even">
+<td align="left">LouisVuitton</td>
+<td align="right">435.4394</td>
+<td align="right">920.8512</td>
+<td align="right">3541</td>
+</tr>
+<tr class="odd">
+<td align="left">SamsungMobile</td>
+<td align="right">383.9858</td>
+<td align="right">1118.9683</td>
+<td align="right">1200</td>
+</tr>
+<tr class="even">
+<td align="left">PlayStation</td>
+<td align="right">372.1775</td>
+<td align="right">1302.4552</td>
+<td align="right">2502</td>
+</tr>
+<tr class="odd">
+<td align="left">FoxNews</td>
+<td align="right">341.9851</td>
+<td align="right">1045.1122</td>
+<td align="right">13962</td>
+</tr>
+<tr class="even">
+<td align="left">Budweiser</td>
+<td align="right">329.1538</td>
+<td align="right">581.3297</td>
+<td align="right">364</td>
+</tr>
+<tr class="odd">
+<td align="left">LEGO_Group</td>
+<td align="right">316.7794</td>
+<td align="right">531.6975</td>
+<td align="right">757</td>
+</tr>
+<tr class="even">
+<td align="left">Target</td>
+<td align="right">260.8039</td>
+<td align="right">680.0900</td>
+<td align="right">311</td>
+</tr>
+<tr class="odd">
+<td align="left">VictoriasSecret</td>
+<td align="right">256.1895</td>
+<td align="right">1293.5338</td>
+<td align="right">1272</td>
+</tr>
+<tr class="even">
+<td align="left">Google</td>
+<td align="right">249.1283</td>
+<td align="right">711.3858</td>
+<td align="right">1138</td>
+</tr>
+<tr class="odd">
+<td align="left">CocaCola</td>
+<td align="right">248.1827</td>
+<td align="right">728.4135</td>
+<td align="right">208</td>
+</tr>
+<tr class="even">
+<td align="left">pepsi</td>
+<td align="right">246.6440</td>
+<td align="right">368.8307</td>
+<td align="right">1146</td>
+</tr>
+<tr class="odd">
+<td align="left">Android</td>
+<td align="right">227.5668</td>
+<td align="right">559.9741</td>
+<td align="right">734</td>
+</tr>
+<tr class="even">
+<td align="left">Porsche</td>
+<td align="right">226.1846</td>
+<td align="right">752.7302</td>
+<td align="right">493</td>
+</tr>
+<tr class="odd">
+<td align="left">Microsoft</td>
+<td align="right">201.6388</td>
+<td align="right">420.6118</td>
+<td align="right">407</td>
+</tr>
+<tr class="even">
+<td align="left">BMW</td>
+<td align="right">199.4597</td>
+<td align="right">853.7346</td>
+<td align="right">422</td>
+</tr>
+<tr class="odd">
+<td align="left">Audi</td>
+<td align="right">183.7878</td>
+<td align="right">696.3829</td>
+<td align="right">410</td>
+</tr>
+<tr class="even">
+<td align="left">Coach</td>
+<td align="right">146.2672</td>
+<td align="right">368.2731</td>
+<td align="right">509</td>
+</tr>
+<tr class="odd">
+<td align="left">SamsungMobileUS</td>
+<td align="right">135.5896</td>
+<td align="right">619.4245</td>
+<td align="right">848</td>
+</tr>
+<tr class="even">
+<td align="left">Burberry</td>
+<td align="right">132.7936</td>
+<td align="right">343.5422</td>
+<td align="right">6138</td>
+</tr>
+<tr class="odd">
+<td align="left">facebook</td>
+<td align="right">129.2500</td>
+<td align="right">358.9519</td>
+<td align="right">104</td>
+</tr>
+<tr class="even">
+<td align="left">hm</td>
+<td align="right">115.1360</td>
+<td align="right">386.0964</td>
+<td align="right">2698</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th align="left">screenName</th>
+<th align="right">rts</th>
+<th align="right">favs</th>
+<th align="right">tweets</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">PlayStation</td>
+<td align="right">211.750000</td>
+<td align="right">1179.333333</td>
+<td align="right">24</td>
+</tr>
+<tr class="even">
+<td align="left">FoxNews</td>
+<td align="right">59.750000</td>
+<td align="right">164.500000</td>
+<td align="right">24</td>
+</tr>
+<tr class="odd">
+<td align="left">gucci</td>
+<td align="right">53.044444</td>
+<td align="right">118.022222</td>
+<td align="right">45</td>
+</tr>
+<tr class="even">
+<td align="left">LouisVuitton</td>
+<td align="right">40.166667</td>
+<td align="right">87.500000</td>
+<td align="right">18</td>
+</tr>
+<tr class="odd">
+<td align="left">CHANEL</td>
+<td align="right">36.714286</td>
+<td align="right">24.904762</td>
+<td align="right">21</td>
+</tr>
+<tr class="even">
+<td align="left">netflix</td>
+<td align="right">27.084139</td>
+<td align="right">181.649903</td>
+<td align="right">1034</td>
+</tr>
+<tr class="odd">
+<td align="left">espn</td>
+<td align="right">22.333333</td>
+<td align="right">97.833333</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="left">RockstarGames</td>
+<td align="right">18.520000</td>
+<td align="right">98.160000</td>
+<td align="right">25</td>
+</tr>
+<tr class="odd">
+<td align="left">Boeing</td>
+<td align="right">9.452703</td>
+<td align="right">51.858108</td>
+<td align="right">148</td>
+</tr>
+<tr class="even">
+<td align="left">adidasoriginals</td>
+<td align="right">7.929801</td>
+<td align="right">24.398182</td>
+<td align="right">5171</td>
+</tr>
+<tr class="odd">
+<td align="left">Microsoft</td>
+<td align="right">7.710526</td>
+<td align="right">17.184210</td>
+<td align="right">38</td>
+</tr>
+<tr class="even">
+<td align="left">hm</td>
+<td align="right">7.304094</td>
+<td align="right">13.181287</td>
+<td align="right">513</td>
+</tr>
+<tr class="odd">
+<td align="left">Fendi</td>
+<td align="right">6.500000</td>
+<td align="right">13.500000</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="left">Prada</td>
+<td align="right">5.942857</td>
+<td align="right">4.914286</td>
+<td align="right">35</td>
+</tr>
+<tr class="odd">
+<td align="left">SamsungMobile</td>
+<td align="right">5.366197</td>
+<td align="right">14.690141</td>
+<td align="right">213</td>
+</tr>
+<tr class="even">
+<td align="left">Chase</td>
+<td align="right">5.338235</td>
+<td align="right">12.820378</td>
+<td align="right">952</td>
+</tr>
+<tr class="odd">
+<td align="left">Burberry</td>
+<td align="right">5.156626</td>
+<td align="right">18.783133</td>
+<td align="right">166</td>
+</tr>
+<tr class="even">
+<td align="left">CanonUSA</td>
+<td align="right">5.000000</td>
+<td align="right">11.000000</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">amazon</td>
+<td align="right">4.122526</td>
+<td align="right">11.120136</td>
+<td align="right">2930</td>
+</tr>
+<tr class="even">
+<td align="left">corona</td>
+<td align="right">3.317073</td>
+<td align="right">2.097561</td>
+<td align="right">41</td>
+</tr>
+<tr class="odd">
+<td align="left">Nissan</td>
+<td align="right">3.054794</td>
+<td align="right">11.292237</td>
+<td align="right">219</td>
+</tr>
+<tr class="even">
+<td align="left">intel</td>
+<td align="right">2.715679</td>
+<td align="right">6.768721</td>
+<td align="right">2564</td>
+</tr>
+<tr class="odd">
+<td align="left">Cartier</td>
+<td align="right">2.623844</td>
+<td align="right">4.516958</td>
+<td align="right">973</td>
+</tr>
+<tr class="even">
+<td align="left">BlackBerry</td>
+<td align="right">2.211268</td>
+<td align="right">4.985915</td>
+<td align="right">71</td>
+</tr>
+<tr class="odd">
+<td align="left">HomeDepot</td>
+<td align="right">2.087690</td>
+<td align="right">3.455312</td>
+<td align="right">593</td>
+</tr>
+<tr class="even">
+<td align="left">Audi</td>
+<td align="right">2.054645</td>
+<td align="right">6.370804</td>
+<td align="right">2562</td>
+</tr>
+<tr class="odd">
+<td align="left">LOrealParisUSA</td>
+<td align="right">1.705030</td>
+<td align="right">5.230179</td>
+<td align="right">1173</td>
+</tr>
+<tr class="even">
+<td align="left">HSBC</td>
+<td align="right">1.673469</td>
+<td align="right">3.489796</td>
+<td align="right">49</td>
+</tr>
+<tr class="odd">
+<td align="left">Sony</td>
+<td align="right">1.590563</td>
+<td align="right">9.494673</td>
+<td align="right">657</td>
+</tr>
+<tr class="even">
+<td align="left">Android</td>
+<td align="right">1.553228</td>
+<td align="right">2.404689</td>
+<td align="right">5204</td>
+</tr>
+</tbody>
+</table>
+<p>We also look at companies that most frequently send reply tweets as a percentage of all tweets. Airline companies like Delta and Southwest use most of their tweets to engage with and manage customers. There doesn’t seem to be a pattern among companies that have a reply rate, there is a mix of industries and screenName size.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">screenName</th>
+<th align="right">reply_rate</th>
+<th align="right">total_replies</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Delta</td>
+<td align="right">0.9977051</td>
+<td align="right">35215</td>
+</tr>
+<tr class="even">
+<td align="left">SouthwestAir</td>
+<td align="right">0.9963492</td>
+<td align="right">35479</td>
+</tr>
+<tr class="odd">
+<td align="left">McDonalds</td>
+<td align="right">0.9953494</td>
+<td align="right">34458</td>
+</tr>
+<tr class="even">
+<td align="left">Costco</td>
+<td align="right">0.9943860</td>
+<td align="right">1417</td>
+</tr>
+<tr class="odd">
+<td align="left">Starbucks</td>
+<td align="right">0.9904478</td>
+<td align="right">30277</td>
+</tr>
+<tr class="even">
+<td align="left">TMobile</td>
+<td align="right">0.9881356</td>
+<td align="right">33481</td>
+</tr>
+<tr class="odd">
+<td align="left">CocaCola</td>
+<td align="right">0.9875337</td>
+<td align="right">16477</td>
+</tr>
+<tr class="even">
+<td align="left">facebook</td>
+<td align="right">0.9858059</td>
+<td align="right">7223</td>
+</tr>
+<tr class="odd">
+<td align="left">Nike</td>
+<td align="right">0.9825788</td>
+<td align="right">8573</td>
+</tr>
+<tr class="even">
+<td align="left">Ford</td>
+<td align="right">0.9811800</td>
+<td align="right">14285</td>
+</tr>
+<tr class="odd">
+<td align="left">Target</td>
+<td align="right">0.9754267</td>
+<td align="right">12345</td>
+</tr>
+<tr class="even">
+<td align="left">ZARA</td>
+<td align="right">0.9740103</td>
+<td align="right">19338</td>
+</tr>
+<tr class="odd">
+<td align="left">redbull</td>
+<td align="right">0.9711962</td>
+<td align="right">7283</td>
+</tr>
+<tr class="even">
+<td align="left">Walmart</td>
+<td align="right">0.9688693</td>
+<td align="right">20043</td>
+</tr>
+<tr class="odd">
+<td align="left">verizon</td>
+<td align="right">0.9681036</td>
+<td align="right">12262</td>
+</tr>
+<tr class="even">
+<td align="left">SamsungMobileUS</td>
+<td align="right">0.9575108</td>
+<td align="right">19110</td>
+</tr>
+<tr class="odd">
+<td align="left">Fritolay</td>
+<td align="right">0.9571933</td>
+<td align="right">7312</td>
+</tr>
+<tr class="even">
+<td align="left">Budweiser</td>
+<td align="right">0.9530807</td>
+<td align="right">7394</td>
+</tr>
+<tr class="odd">
+<td align="left">ATT</td>
+<td align="right">0.9527960</td>
+<td align="right">14210</td>
+</tr>
+<tr class="even">
+<td align="left">Xbox</td>
+<td align="right">0.9527747</td>
+<td align="right">23161</td>
+</tr>
+<tr class="odd">
+<td align="left">LEGO_Group</td>
+<td align="right">0.9509270</td>
+<td align="right">14669</td>
+</tr>
+<tr class="even">
+<td align="left">WholeFoods</td>
+<td align="right">0.9432456</td>
+<td align="right">16304</td>
+</tr>
+<tr class="odd">
+<td align="left">Colgate</td>
+<td align="right">0.9366608</td>
+<td align="right">3697</td>
+</tr>
+<tr class="even">
+<td align="left">SUBWAY</td>
+<td align="right">0.9316476</td>
+<td align="right">4716</td>
+</tr>
+<tr class="odd">
+<td align="left">Google</td>
+<td align="right">0.9315077</td>
+<td align="right">15477</td>
+</tr>
+<tr class="even">
+<td align="left">NESCAFE</td>
+<td align="right">0.9283880</td>
+<td align="right">6508</td>
+</tr>
+<tr class="odd">
+<td align="left">UPS</td>
+<td align="right">0.9249933</td>
+<td align="right">10322</td>
+</tr>
+<tr class="even">
+<td align="left">BMW</td>
+<td align="right">0.9207363</td>
+<td align="right">4902</td>
+</tr>
+<tr class="odd">
+<td align="left">VictoriasSecret</td>
+<td align="right">0.9155491</td>
+<td align="right">13790</td>
+</tr>
+<tr class="even">
+<td align="left">Gap</td>
+<td align="right">0.9123460</td>
+<td align="right">7109</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="sentiment-analysis" class="section level2">
+<h2>Sentiment Analysis</h2>
+<div id="nrc-dictionary" class="section level3">
+<h3>NRC Dictionary</h3>
+<p>We can use word choices to classify whether a tweet or screenName exhibit specific sentiments. We start our sentiment analysis using the NRC dictionary. It has a larger dictionary of words and can classify numerous sentiments. Stopping/filler words like “and”, “of”, “to”, etc. are removed.</p>
+<p>In general, companies post tweets with positive sentiments and to a lesser extent, more trustworthy, anticipatory, and joyous tweets. Here is table of total counts of sentiments across all observed tweets.</p>
+<p>As a side note, I looked into removing non-English words from the dataset to increase algorithm efficiency and eliminate noise from misspellings, but found existing functions too slow or their dictionaries to be too small. In any case, companies mostly use properly spelled words.</p>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/sentiment-analysis-1.png" width="672" /></p>
+<p>We calculate the proportion of each sentiment that the company expresses as a part of all sentiments, then order each company within each sentiment. So, we find companies representative of each emotion. For example, we find Boeing at the top of the list for “anticipation”, likely because many of their tweets acknowledge the anticipation of flights. Fox News is near the top of anger, disgust, negative, and sadness largely because news stories include such feelings. BBVA is mistakenly at the top of anger/disgust/negative because many of the company’s tweets are in Spanish, and the word “sin” is classified as all of those sentiments, when the word actually translates to “without” in English. Also, “saber” and “leer” are considered negative words when they mean “to know” and “to learn”, respectively.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">test</th>
+<th align="left">anger</th>
+<th align="left">anticipation</th>
+<th align="left">disgust</th>
+<th align="left">fear</th>
+<th align="left">joy</th>
+<th align="left">negative</th>
+<th align="left">positive</th>
+<th align="left">sadness</th>
+<th align="left">surprise</th>
+<th align="left">trust</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">bbva</td>
+<td align="left">Boeing</td>
+<td align="left">bbva</td>
+<td align="left">FoxNews</td>
+<td align="left">HP</td>
+<td align="left">bbva</td>
+<td align="left">Costco</td>
+<td align="left">marcjacobs</td>
+<td align="left">Etsy</td>
+<td align="left">Google</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">verizon</td>
+<td align="left">WholeFoods</td>
+<td align="left">JohnDeere</td>
+<td align="left">RockstarGames</td>
+<td align="left">Starbucks</td>
+<td align="left">FoxNews</td>
+<td align="left">SUBWAY</td>
+<td align="left">SAP</td>
+<td align="left">Visa</td>
+<td align="left">ZARA</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">RockstarGames</td>
+<td align="left">verizon</td>
+<td align="left">FoxNews</td>
+<td align="left">LouisVuitton</td>
+<td align="left">Visa</td>
+<td align="left">marcjacobs</td>
+<td align="left">Hyundai</td>
+<td align="left">CHANEL</td>
+<td align="left">Prada</td>
+<td align="left">facebook</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">FoxNews</td>
+<td align="left">redbull</td>
+<td align="left">Heineken</td>
+<td align="left">PlayStation</td>
+<td align="left">Target</td>
+<td align="left">Budweiser</td>
+<td align="left">AmericanExpress</td>
+<td align="left">FoxNews</td>
+<td align="left">UPS</td>
+<td align="left">AmericanExpress</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">Disney</td>
+<td align="left">Hermes_Paris</td>
+<td align="left">netflix</td>
+<td align="left">bbva</td>
+<td align="left">Mastercard</td>
+<td align="left">Chase</td>
+<td align="left">Audi</td>
+<td align="left">Delta</td>
+<td align="left">Mastercard</td>
+<td align="left">TOMS</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">Chase</td>
+<td align="left">Visa</td>
+<td align="left">woot</td>
+<td align="left">Disney</td>
+<td align="left">Pampers</td>
+<td align="left">netflix</td>
+<td align="left">Ford</td>
+<td align="left">gucci</td>
+<td align="left">corona</td>
+<td align="left">Fritolay</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="left">espn</td>
+<td align="left">LouisVuitton</td>
+<td align="left">RockstarGames</td>
+<td align="left">Heineken</td>
+<td align="left">Ford</td>
+<td align="left">CHANEL</td>
+<td align="left">Porsche</td>
+<td align="left">Prada</td>
+<td align="left">Fendi</td>
+<td align="left">Android</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="left">Budweiser</td>
+<td align="left">corona</td>
+<td align="left">Hermes_Paris</td>
+<td align="left">netflix</td>
+<td align="left">NESCAFE</td>
+<td align="left">woot</td>
+<td align="left">WholeFoods</td>
+<td align="left">SouthwestAir</td>
+<td align="left">WellsFargo</td>
+<td align="left">Delta</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">Heineken</td>
+<td align="left">RBC</td>
+<td align="left">Fritolay</td>
+<td align="left">Burberry</td>
+<td align="left">Etsy</td>
+<td align="left">RockstarGames</td>
+<td align="left">intel</td>
+<td align="left">bbva</td>
+<td align="left">Gillette</td>
+<td align="left">SantanderBankUS</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="left">PlayStation</td>
+<td align="left">HP</td>
+<td align="left">Pampers</td>
+<td align="left">espn</td>
+<td align="left">IKEAUSA</td>
+<td align="left">Heineken</td>
+<td align="left">Accenture</td>
+<td align="left">netflix</td>
+<td align="left">LouisVuitton</td>
+<td align="left">generalelectric</td>
+</tr>
+<tr class="odd">
+<td align="right">11</td>
+<td align="left">marcjacobs</td>
+<td align="left">Xbox</td>
+<td align="left">espn</td>
+<td align="left">gucci</td>
+<td align="left">HomeDepot</td>
+<td align="left">PlayStation</td>
+<td align="left">TOMS</td>
+<td align="left">PlayStation</td>
+<td align="left">FedEx</td>
+<td align="left">HSBC</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="left">netflix</td>
+<td align="left">HomeDepot</td>
+<td align="left">Delta</td>
+<td align="left">Philips</td>
+<td align="left">WellsFargo</td>
+<td align="left">SAP</td>
+<td align="left">AEO</td>
+<td align="left">Cartier</td>
+<td align="left">RBC</td>
+<td align="left">Oracle</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="left">Burberry</td>
+<td align="left">Android</td>
+<td align="left">SouthwestAir</td>
+<td align="left">IBM</td>
+<td align="left">Toyota</td>
+<td align="left">espn</td>
+<td align="left">BASF</td>
+<td align="left">Hermes_Paris</td>
+<td align="left">McDonalds</td>
+<td align="left">Philips</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+<td align="left">gucci</td>
+<td align="left">Oracle</td>
+<td align="left">Gap</td>
+<td align="left">SamsungMobile</td>
+<td align="left">McDonalds</td>
+<td align="left">thomsonreuters</td>
+<td align="left">CaterpillarInc</td>
+<td align="left">SantanderBankUS</td>
+<td align="left">Pampers</td>
+<td align="left">AEO</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+<td align="left">SamsungMobileUS</td>
+<td align="left">Budweiser</td>
+<td align="left">Coach</td>
+<td align="left">thomsonreuters</td>
+<td align="left">Xbox</td>
+<td align="left">Coach</td>
+<td align="left">BlackBerry</td>
+<td align="left">Burberry</td>
+<td align="left">Target</td>
+<td align="left">NESCAFE</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="left">Nike</td>
+<td align="left">Nike</td>
+<td align="left">Sony</td>
+<td align="left">BlackBerry</td>
+<td align="left">LOrealParisUSA</td>
+<td align="left">Disney</td>
+<td align="left">CocaCola</td>
+<td align="left">espn</td>
+<td align="left">amazon</td>
+<td align="left">Colgate</td>
+</tr>
+<tr class="odd">
+<td align="right">17</td>
+<td align="left">Nissan</td>
+<td align="left">SantanderBankUS</td>
+<td align="left">KelloggsUS</td>
+<td align="left">Nissan</td>
+<td align="left">CocaCola</td>
+<td align="left">gucci</td>
+<td align="left">facebook</td>
+<td align="left">Nissan</td>
+<td align="left">Cartier</td>
+<td align="left">Nestle</td>
+</tr>
+<tr class="even">
+<td align="right">18</td>
+<td align="left">SamsungMobile</td>
+<td align="left">FedEx</td>
+<td align="left">PlayStation</td>
+<td align="left">Microsoft</td>
+<td align="left">corona</td>
+<td align="left">Gap</td>
+<td align="left">Cartier</td>
+<td align="left">Google</td>
+<td align="left">Walmart</td>
+<td align="left">Hyundai</td>
+</tr>
+<tr class="odd">
+<td align="right">19</td>
+<td align="left">thomsonreuters</td>
+<td align="left">TMobile</td>
+<td align="left">ZARA</td>
+<td align="left">Allianz</td>
+<td align="left">Lexus</td>
+<td align="left">SamsungMobile</td>
+<td align="left">Siemens</td>
+<td align="left">RockstarGames</td>
+<td align="left">CHANEL</td>
+<td align="left">ATT</td>
+</tr>
+<tr class="even">
+<td align="right">20</td>
+<td align="left">woot</td>
+<td align="left">VictoriasSecret</td>
+<td align="left">Nestle</td>
+<td align="left">Nike</td>
+<td align="left">Gillette</td>
+<td align="left">SamsungMobileUS</td>
+<td align="left">SantanderBankUS</td>
+<td align="left">AEO</td>
+<td align="left">Coach</td>
+<td align="left">CaterpillarInc</td>
+</tr>
+<tr class="odd">
+<td align="right">21</td>
+<td align="left">Nestle</td>
+<td align="left">LEGO_Group</td>
+<td align="left">SamsungMobileUS</td>
+<td align="left">pepsi</td>
+<td align="left">amazon</td>
+<td align="left">Nissan</td>
+<td align="left">Oracle</td>
+<td align="left">woot</td>
+<td align="left">BestBuy</td>
+<td align="left">Danone</td>
+</tr>
+<tr class="even">
+<td align="right">22</td>
+<td align="left">Fendi</td>
+<td align="left">Gillette</td>
+<td align="left">BestBuy</td>
+<td align="left">woot</td>
+<td align="left">Honda</td>
+<td align="left">SouthwestAir</td>
+<td align="left">Danone</td>
+<td align="left">Gap</td>
+<td align="left">Xbox</td>
+<td align="left">chevrolet</td>
+</tr>
+<tr class="odd">
+<td align="right">23</td>
+<td align="left">Lexus</td>
+<td align="left">IKEAUSA</td>
+<td align="left">McDonalds</td>
+<td align="left">Mastercard</td>
+<td align="left">VictoriasSecret</td>
+<td align="left">Prada</td>
+<td align="left">CanonUSA</td>
+<td align="left">Coach</td>
+<td align="left">Burberry</td>
+<td align="left">kraftfoods</td>
+</tr>
+<tr class="even">
+<td align="right">24</td>
+<td align="left">Sony</td>
+<td align="left">WellsFargo</td>
+<td align="left">thomsonreuters</td>
+<td align="left">Citi</td>
+<td align="left">BestBuy</td>
+<td align="left">Allianz</td>
+<td align="left">Microsoft</td>
+<td align="left">LouisVuitton</td>
+<td align="left">Colgate</td>
+<td align="left">CanonUSA</td>
+</tr>
+<tr class="odd">
+<td align="right">25</td>
+<td align="left">pepsi</td>
+<td align="left">PlayStation</td>
+<td align="left">Nissan</td>
+<td align="left">Boeing</td>
+<td align="left">Walmart</td>
+<td align="left">Nike</td>
+<td align="left">IBM</td>
+<td align="left">SamsungMobileUS</td>
+<td align="left">HersheyCompany</td>
+<td align="left">Allianz</td>
+</tr>
+<tr class="even">
+<td align="right">26</td>
+<td align="left">ATT</td>
+<td align="left">NESCAFE</td>
+<td align="left">HersheyCompany</td>
+<td align="left">Sony</td>
+<td align="left">UniqloUSA</td>
+<td align="left">LOrealParisUSA</td>
+<td align="left">ZARA</td>
+<td align="left">ZARA</td>
+<td align="left">redbull</td>
+<td align="left">IBM</td>
+</tr>
+<tr class="odd">
+<td align="right">27</td>
+<td align="left">FedEx</td>
+<td align="left">Cisco</td>
+<td align="left">Lexus</td>
+<td align="left">Cisco</td>
+<td align="left">TMobile</td>
+<td align="left">JohnDeere</td>
+<td align="left">Citi</td>
+<td align="left">eBay</td>
+<td align="left">Sony</td>
+<td align="left">Citi</td>
+</tr>
+<tr class="even">
+<td align="right">28</td>
+<td align="left">eBay</td>
+<td align="left">Chase</td>
+<td align="left">Philips</td>
+<td align="left">Accenture</td>
+<td align="left">LEGO_Group</td>
+<td align="left">Fendi</td>
+<td align="left">BMW</td>
+<td align="left">pepsi</td>
+<td align="left">SamsungMobile</td>
+<td align="left">MercedesBenz</td>
+</tr>
+<tr class="odd">
+<td align="right">29</td>
+<td align="left">Delta</td>
+<td align="left">SamsungMobile</td>
+<td align="left">ATT</td>
+<td align="left">CHANEL</td>
+<td align="left">Android</td>
+<td align="left">Sony</td>
+<td align="left">pepsi</td>
+<td align="left">adidasoriginals</td>
+<td align="left">marcjacobs</td>
+<td align="left">Honda</td>
+</tr>
+<tr class="even">
+<td align="right">30</td>
+<td align="left">SouthwestAir</td>
+<td align="left">Toyota</td>
+<td align="left">BASF</td>
+<td align="left">SAP</td>
+<td align="left">BMW</td>
+<td align="left">eBay</td>
+<td align="left">Philips</td>
+<td align="left">Fendi</td>
+<td align="left">BankofAmerica</td>
+<td align="left">FedEx</td>
+</tr>
+</tbody>
+</table>
+<p>Next, we look at common words by each sentiment for non-replies. We expect non-replies to be more indicative of general announcements and marketing.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">anger</th>
+<th align="left">anticipation</th>
+<th align="left">disgust</th>
+<th align="left">fear</th>
+<th align="left">joy</th>
+<th align="left">negative</th>
+<th align="left">positive</th>
+<th align="left">sadness</th>
+<th align="left">surprise</th>
+<th align="left">trust</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">shot</td>
+<td align="left">watch</td>
+<td align="left">john</td>
+<td align="left">watch</td>
+<td align="left">love</td>
+<td align="left">fall</td>
+<td align="left">learn</td>
+<td align="left">fall</td>
+<td align="left">inspired</td>
+<td align="left">happy</td>
+</tr>
+<tr class="even">
+<td align="left">limited</td>
+<td align="left">time</td>
+<td align="left">winning</td>
+<td align="left">shot</td>
+<td align="left">happy</td>
+<td align="left">sap</td>
+<td align="left">love</td>
+<td align="left">sap</td>
+<td align="left">gift</td>
+<td align="left">top</td>
+</tr>
+<tr class="odd">
+<td align="left">lace</td>
+<td align="left">ready</td>
+<td align="left">feeling</td>
+<td align="left">change</td>
+<td align="left">perfect</td>
+<td align="left">shot</td>
+<td align="left">happy</td>
+<td align="left">shot</td>
+<td align="left">shot</td>
+<td align="left">team</td>
+</tr>
+<tr class="even">
+<td align="left">hit</td>
+<td align="left">happy</td>
+<td align="left">powerful</td>
+<td align="left">journey</td>
+<td align="left">holiday</td>
+<td align="left">black</td>
+<td align="left">join</td>
+<td align="left">black</td>
+<td align="left">trump</td>
+<td align="left">perfect</td>
+</tr>
+<tr class="odd">
+<td align="left">vote</td>
+<td align="left">top</td>
+<td align="left">treat</td>
+<td align="left">lace</td>
+<td align="left">favorite</td>
+<td align="left">wear</td>
+<td align="left">top</td>
+<td align="left">art</td>
+<td align="left">chance</td>
+<td align="left">favorite</td>
+</tr>
+<tr class="even">
+<td align="left">challenge</td>
+<td align="left">perfect</td>
+<td align="left">finally</td>
+<td align="left">challenge</td>
+<td align="left">share</td>
+<td align="left">tax</td>
+<td align="left">perfect</td>
+<td align="left">music</td>
+<td align="left">art</td>
+<td align="left">share</td>
+</tr>
+<tr class="odd">
+<td align="left">hot</td>
+<td align="left">store</td>
+<td align="left">death</td>
+<td align="left">police</td>
+<td align="left">inspired</td>
+<td align="left">limited</td>
+<td align="left">store</td>
+<td align="left">tax</td>
+<td align="left">excited</td>
+<td align="left">inspired</td>
+</tr>
+<tr class="even">
+<td align="left">feeling</td>
+<td align="left">holiday</td>
+<td align="left">boy</td>
+<td align="left">feeling</td>
+<td align="left">proud</td>
+<td align="left">john</td>
+<td align="left">holiday</td>
+<td align="left">limited</td>
+<td align="left">award</td>
+<td align="left">proud</td>
+</tr>
+<tr class="odd">
+<td align="left">demand</td>
+<td align="left">tomorrow</td>
+<td align="left">bad</td>
+<td align="left">military</td>
+<td align="left">create</td>
+<td align="left">lace</td>
+<td align="left">favorite</td>
+<td align="left">blue</td>
+<td align="left">catch</td>
+<td align="left">president</td>
+</tr>
+<tr class="even">
+<td align="left">fight</td>
+<td align="left">coming</td>
+<td align="left">cancer</td>
+<td align="left">fight</td>
+<td align="left">gift</td>
+<td align="left">hit</td>
+<td align="left">share</td>
+<td align="left">lace</td>
+<td align="left">unique</td>
+<td align="left">save</td>
+</tr>
+</tbody>
+</table>
+<p>In contrast, we look at words used in replies, which are typically aimed at customers and complaints. Many of the generally negative words are suggestive of being understanding towards frustrated customers.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">anger</th>
+<th align="left">anticipation</th>
+<th align="left">disgust</th>
+<th align="left">fear</th>
+<th align="left">joy</th>
+<th align="left">negative</th>
+<th align="left">positive</th>
+<th align="left">sadness</th>
+<th align="left">surprise</th>
+<th align="left">trust</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">delay</td>
+<td align="left">happy</td>
+<td align="left">delay</td>
+<td align="left">delay</td>
+<td align="left">love</td>
+<td align="left">wait</td>
+<td align="left">love</td>
+<td align="left">apologize</td>
+<td align="left">hope</td>
+<td align="left">happy</td>
+</tr>
+<tr class="even">
+<td align="left">shout</td>
+<td align="left">glad</td>
+<td align="left">treat</td>
+<td align="left">treat</td>
+<td align="left">happy</td>
+<td align="left">delay</td>
+<td align="left">happy</td>
+<td align="left">delay</td>
+<td align="left">chance</td>
+<td align="left">hope</td>
+</tr>
+<tr class="odd">
+<td align="left">treat</td>
+<td align="left">hope</td>
+<td align="left">feeling</td>
+<td align="left">feeling</td>
+<td align="left">glad</td>
+<td align="left">treat</td>
+<td align="left">glad</td>
+<td align="left">treat</td>
+<td align="left">luck</td>
+<td align="left">team</td>
+</tr>
+<tr class="even">
+<td align="left">frustration</td>
+<td align="left">time</td>
+<td align="left">disappointment</td>
+<td align="left">change</td>
+<td align="left">hope</td>
+<td align="left">frustration</td>
+<td align="left">hope</td>
+<td align="left">feeling</td>
+<td align="left">excited</td>
+<td align="left">enjoy</td>
+</tr>
+<tr class="odd">
+<td align="left">feeling</td>
+<td align="left">enjoy</td>
+<td align="left">john</td>
+<td align="left">flying</td>
+<td align="left">enjoy</td>
+<td align="left">forget</td>
+<td align="left">enjoy</td>
+<td align="left">disappointment</td>
+<td align="left">shopping</td>
+<td align="left">assist</td>
+</tr>
+<tr class="even">
+<td align="left">deserve</td>
+<td align="left">share</td>
+<td align="left">disappointed</td>
+<td align="left">shot</td>
+<td align="left">share</td>
+<td align="left">feeling</td>
+<td align="left">assist</td>
+<td align="left">regret</td>
+<td align="left">sweet</td>
+<td align="left">share</td>
+</tr>
+<tr class="odd">
+<td align="left">words</td>
+<td align="left">store</td>
+<td align="left">hate</td>
+<td align="left">hearing</td>
+<td align="left">fun</td>
+<td align="left">disappointment</td>
+<td align="left">share</td>
+<td align="left">shot</td>
+<td align="left">shout</td>
+<td align="left">account</td>
+</tr>
+<tr class="even">
+<td align="left">wireless</td>
+<td align="left">wait</td>
+<td align="left">hanging</td>
+<td align="left">surprise</td>
+<td align="left">perfect</td>
+<td align="left">regret</td>
+<td align="left">contact</td>
+<td align="left">error</td>
+<td align="left">treat</td>
+<td align="left">confirmation</td>
+</tr>
+<tr class="odd">
+<td align="left">shot</td>
+<td align="left">fun</td>
+<td align="left">bad</td>
+<td align="left">force</td>
+<td align="left">favorite</td>
+<td align="left">cold</td>
+<td align="left">store</td>
+<td align="left">unable</td>
+<td align="left">birthday</td>
+<td align="left">apologize</td>
+</tr>
+<tr class="even">
+<td align="left">grab</td>
+<td align="left">perfect</td>
+<td align="left">disappoint</td>
+<td align="left">worry</td>
+<td align="left">luck</td>
+<td align="left">words</td>
+<td align="left">customer</td>
+<td align="left">music</td>
+<td align="left">feeling</td>
+<td align="left">provide</td>
+</tr>
+</tbody>
+</table>
+<div id="clustering-companies-by-sentiment" class="section level4">
+<h4>Clustering companies by sentiment</h4>
+<p>Perhaps we can find natural clusters of companies based on the proportion of emotions they use in their tweets. We use k-means clustering, and using the Elbow method, we settle on 3 clusters.</p>
+<p>The clusters seem to form into companies that * Use positive words more than average * Use negative words more than average * Don’t particularly use positive or negative words</p>
+<p>From how clearly defined the boundaries of the clusters are in the visualization, we can conclude that specific sentiments like anger, disgust, trust, etc. are not very distinguishable from the more general positive and negative sentiments.</p>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-13-1.png" width="672" /><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
+</div>
+</div>
+<div id="bing-dictionary" class="section level3">
+<h3>Bing Dictionary</h3>
+<p>The NRC dictionary doesn’t seem large enough to fit so many emotions, and we find too much overlap within positive and negative emotions. So, we change our sentiment dictionary to the Bing dictionary, which classifies words as simply positive or negative. As a result, we can find a net sentiment rating by taking the difference in frequencies of positive and negative words.</p>
+<p>Sentiment scores are mainly a function of frequency of tweeting, so we plot the two variables against each other. We notice that Starbucks, McDonald’s, T-Mobile, Xbox, Walmart, and LEGO are all examples of brands that use more positive words than expected. On the other hand, airlines like Southwest and Delta have a lower sentiment score than a linear model predicts. Additionally, Google and Fox News have noticeably smaller sentiment scores for how often they tweet. Fox News is the only brand to have a negative sentiment score.</p>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>We look at the most frequently used words by each company. Costco received a lot of backlash over its logo being on Breitbart News, and replied to users assuring that it is not affiliated with Breitbart News. Companies like Disney, Subway, Visa, and others frequently promote a hashtag for their marketing campaign. Other companies like Ford or Verizon focus on customer relations, and direct people to (direct) message the company through Twitter or customer service.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">screenName</th>
+<th align="left">word</th>
+<th align="right">n</th>
+<th align="right">total</th>
+<th align="right">freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Costco</td>
+<td align="left">breitbart</td>
+<td align="right">2844</td>
+<td align="right">8535</td>
+<td align="right">0.3332162</td>
+</tr>
+<tr class="even">
+<td align="left">Ford</td>
+<td align="left">message</td>
+<td align="right">9476</td>
+<td align="right">61926</td>
+<td align="right">0.1530213</td>
+</tr>
+<tr class="odd">
+<td align="left">Disney</td>
+<td align="left">#chooseyourpath</td>
+<td align="right">3062</td>
+<td align="right">21197</td>
+<td align="right">0.1444544</td>
+</tr>
+<tr class="even">
+<td align="left">SUBWAY</td>
+<td align="left">#nationalsandwichday</td>
+<td align="right">2594</td>
+<td align="right">20551</td>
+<td align="right">0.1262226</td>
+</tr>
+<tr class="odd">
+<td align="left">Visa</td>
+<td align="left">#applepay</td>
+<td align="right">1578</td>
+<td align="right">13617</td>
+<td align="right">0.1158846</td>
+</tr>
+<tr class="even">
+<td align="left">Budweiser</td>
+<td align="left">#thisbudsforyou</td>
+<td align="right">3670</td>
+<td align="right">32326</td>
+<td align="right">0.1135309</td>
+</tr>
+<tr class="odd">
+<td align="left">Fritolay</td>
+<td align="left">call</td>
+<td align="right">4718</td>
+<td align="right">43966</td>
+<td align="right">0.1073102</td>
+</tr>
+<tr class="even">
+<td align="left">verizon</td>
+<td align="left">dm</td>
+<td align="right">8440</td>
+<td align="right">79924</td>
+<td align="right">0.1056003</td>
+</tr>
+<tr class="odd">
+<td align="left">Hyundai</td>
+<td align="left">hyundai</td>
+<td align="right">3204</td>
+<td align="right">34932</td>
+<td align="right">0.0917211</td>
+</tr>
+<tr class="even">
+<td align="left">Hermes_Paris</td>
+<td align="left">herm</td>
+<td align="right">166</td>
+<td align="right">1852</td>
+<td align="right">0.0896328</td>
+</tr>
+<tr class="odd">
+<td align="left">Heineken</td>
+<td align="left">#championthematch</td>
+<td align="right">2415</td>
+<td align="right">27115</td>
+<td align="right">0.0890651</td>
+</tr>
+<tr class="even">
+<td align="left">LouisVuitton</td>
+<td align="left">#louisvuitton</td>
+<td align="right">2244</td>
+<td align="right">25389</td>
+<td align="right">0.0883847</td>
+</tr>
+<tr class="odd">
+<td align="left">redbull</td>
+<td align="left">wings</td>
+<td align="right">2181</td>
+<td align="right">24687</td>
+<td align="right">0.0883461</td>
+</tr>
+<tr class="even">
+<td align="left">Pampers</td>
+<td align="left">call</td>
+<td align="right">515</td>
+<td align="right">5966</td>
+<td align="right">0.0863225</td>
+</tr>
+<tr class="odd">
+<td align="left">Google</td>
+<td align="left">steps</td>
+<td align="right">7082</td>
+<td align="right">92793</td>
+<td align="right">0.0763204</td>
+</tr>
+<tr class="even">
+<td align="left">Mastercard</td>
+<td align="left">dm</td>
+<td align="right">1749</td>
+<td align="right">24763</td>
+<td align="right">0.0706296</td>
+</tr>
+<tr class="odd">
+<td align="left">AmericanExpress</td>
+<td align="left">connecting</td>
+<td align="right">1985</td>
+<td align="right">28154</td>
+<td align="right">0.0705051</td>
+</tr>
+<tr class="even">
+<td align="left">CanonUSA</td>
+<td align="left">canon</td>
+<td align="right">1617</td>
+<td align="right">23062</td>
+<td align="right">0.0701153</td>
+</tr>
+<tr class="odd">
+<td align="left">Porsche</td>
+<td align="left">#porschecares</td>
+<td align="right">523</td>
+<td align="right">7625</td>
+<td align="right">0.0685902</td>
+</tr>
+<tr class="even">
+<td align="left">TOMS</td>
+<td align="left">supporting</td>
+<td align="right">2457</td>
+<td align="right">36166</td>
+<td align="right">0.0679367</td>
+</tr>
+<tr class="odd">
+<td align="left">ATT</td>
+<td align="left">dm</td>
+<td align="right">5879</td>
+<td align="right">87062</td>
+<td align="right">0.0675266</td>
+</tr>
+<tr class="even">
+<td align="left">WholeFoods</td>
+<td align="left">store</td>
+<td align="right">5014</td>
+<td align="right">75525</td>
+<td align="right">0.0663886</td>
+</tr>
+<tr class="odd">
+<td align="left">VictoriasSecret</td>
+<td align="left">dm</td>
+<td align="right">4373</td>
+<td align="right">68425</td>
+<td align="right">0.0639094</td>
+</tr>
+<tr class="even">
+<td align="left">SantanderBankUS</td>
+<td align="left">dm</td>
+<td align="right">1262</td>
+<td align="right">20647</td>
+<td align="right">0.0611227</td>
+</tr>
+<tr class="odd">
+<td align="left">Prada</td>
+<td align="left">prada</td>
+<td align="right">1430</td>
+<td align="right">23583</td>
+<td align="right">0.0606369</td>
+</tr>
+<tr class="even">
+<td align="left">bbva</td>
+<td align="left">de</td>
+<td align="right">2898</td>
+<td align="right">49398</td>
+<td align="right">0.0586663</td>
+</tr>
+<tr class="odd">
+<td align="left">marcjacobs</td>
+<td align="left">marc</td>
+<td align="right">573</td>
+<td align="right">9853</td>
+<td align="right">0.0581549</td>
+</tr>
+<tr class="even">
+<td align="left">Android</td>
+<td align="left">android</td>
+<td align="right">2098</td>
+<td align="right">37404</td>
+<td align="right">0.0560903</td>
+</tr>
+<tr class="odd">
+<td align="left">Gap</td>
+<td align="left">hear</td>
+<td align="right">2245</td>
+<td align="right">42446</td>
+<td align="right">0.0528907</td>
+</tr>
+<tr class="even">
+<td align="left">Lexus</td>
+<td align="left">km</td>
+<td align="right">1907</td>
+<td align="right">36126</td>
+<td align="right">0.0527875</td>
+</tr>
+<tr class="odd">
+<td align="left">IBM</td>
+<td align="left">ibm</td>
+<td align="right">352</td>
+<td align="right">6674</td>
+<td align="right">0.0527420</td>
+</tr>
+<tr class="even">
+<td align="left">Audi</td>
+<td align="left">dm</td>
+<td align="right">884</td>
+<td align="right">16789</td>
+<td align="right">0.0526535</td>
+</tr>
+<tr class="odd">
+<td align="left">BlackBerry</td>
+<td align="left">#blackberry</td>
+<td align="right">472</td>
+<td align="right">9012</td>
+<td align="right">0.0523746</td>
+</tr>
+<tr class="even">
+<td align="left">facebook</td>
+<td align="left">ao</td>
+<td align="right">2250</td>
+<td align="right">44485</td>
+<td align="right">0.0505788</td>
+</tr>
+<tr class="odd">
+<td align="left">Nissan</td>
+<td align="left">#omgtr</td>
+<td align="right">342</td>
+<td align="right">6766</td>
+<td align="right">0.0505469</td>
+</tr>
+<tr class="even">
+<td align="left">Boeing</td>
+<td align="left">#boeing</td>
+<td align="right">197</td>
+<td align="right">4024</td>
+<td align="right">0.0489563</td>
+</tr>
+<tr class="odd">
+<td align="left">kraftfoods</td>
+<td align="left">jw</td>
+<td align="right">455</td>
+<td align="right">9484</td>
+<td align="right">0.0479755</td>
+</tr>
+<tr class="even">
+<td align="left">CocaCola</td>
+<td align="left">coke</td>
+<td align="right">3734</td>
+<td align="right">80034</td>
+<td align="right">0.0466552</td>
+</tr>
+<tr class="odd">
+<td align="left">corona</td>
+<td align="left">#coronasunsets</td>
+<td align="right">244</td>
+<td align="right">5232</td>
+<td align="right">0.0466361</td>
+</tr>
+<tr class="even">
+<td align="left">RockstarGames</td>
+<td align="left">#gtaonline</td>
+<td align="right">213</td>
+<td align="right">4643</td>
+<td align="right">0.0458755</td>
+</tr>
+<tr class="odd">
+<td align="left">BMW</td>
+<td align="left">sharing</td>
+<td align="right">1344</td>
+<td align="right">29438</td>
+<td align="right">0.0456553</td>
+</tr>
+<tr class="even">
+<td align="left">Colgate</td>
+<td align="left">dm</td>
+<td align="right">1174</td>
+<td align="right">25873</td>
+<td align="right">0.0453755</td>
+</tr>
+<tr class="odd">
+<td align="left">hm</td>
+<td align="left">#hm</td>
+<td align="right">990</td>
+<td align="right">21925</td>
+<td align="right">0.0451539</td>
+</tr>
+<tr class="even">
+<td align="left">ZARA</td>
+<td align="left">dm</td>
+<td align="right">6011</td>
+<td align="right">136729</td>
+<td align="right">0.0439629</td>
+</tr>
+<tr class="odd">
+<td align="left">AEO</td>
+<td align="left">call</td>
+<td align="right">1135</td>
+<td align="right">25836</td>
+<td align="right">0.0439309</td>
+</tr>
+<tr class="even">
+<td align="left">BASF</td>
+<td align="left">basf</td>
+<td align="right">361</td>
+<td align="right">8260</td>
+<td align="right">0.0437046</td>
+</tr>
+<tr class="odd">
+<td align="left">Allianz</td>
+<td align="left">#allianz</td>
+<td align="right">330</td>
+<td align="right">7860</td>
+<td align="right">0.0419847</td>
+</tr>
+<tr class="even">
+<td align="left">NESCAFE</td>
+<td align="left">happy</td>
+<td align="right">873</td>
+<td align="right">21507</td>
+<td align="right">0.0405914</td>
+</tr>
+<tr class="odd">
+<td align="left">Honda</td>
+<td align="left">honda</td>
+<td align="right">1313</td>
+<td align="right">32520</td>
+<td align="right">0.0403752</td>
+</tr>
+<tr class="even">
+<td align="left">Xbox</td>
+<td align="left">#feeltrueemojipower</td>
+<td align="right">2659</td>
+<td align="right">66433</td>
+<td align="right">0.0400253</td>
+</tr>
+<tr class="odd">
+<td align="left">Citi</td>
+<td align="left">#citi</td>
+<td align="right">398</td>
+<td align="right">9950</td>
+<td align="right">0.0400000</td>
+</tr>
+<tr class="even">
+<td align="left">Target</td>
+<td align="left">love</td>
+<td align="right">1373</td>
+<td align="right">34728</td>
+<td align="right">0.0395358</td>
+</tr>
+<tr class="odd">
+<td align="left">chevrolet</td>
+<td align="left">terms</td>
+<td align="right">953</td>
+<td align="right">25189</td>
+<td align="right">0.0378340</td>
+</tr>
+<tr class="even">
+<td align="left">KelloggsUS</td>
+<td align="left">dm</td>
+<td align="right">392</td>
+<td align="right">10386</td>
+<td align="right">0.0377431</td>
+</tr>
+<tr class="odd">
+<td align="left">Nestle</td>
+<td align="left">water</td>
+<td align="right">505</td>
+<td align="right">13793</td>
+<td align="right">0.0366128</td>
+</tr>
+<tr class="even">
+<td align="left">HP</td>
+<td align="left">hp</td>
+<td align="right">369</td>
+<td align="right">10079</td>
+<td align="right">0.0366108</td>
+</tr>
+<tr class="odd">
+<td align="left">Chase</td>
+<td align="left">#teamstephen</td>
+<td align="right">356</td>
+<td align="right">9726</td>
+<td align="right">0.0366029</td>
+</tr>
+<tr class="even">
+<td align="left">jpmorgan</td>
+<td align="left">jpm</td>
+<td align="right">351</td>
+<td align="right">9674</td>
+<td align="right">0.0362828</td>
+</tr>
+<tr class="odd">
+<td align="left">Coach</td>
+<td align="left">#coachny</td>
+<td align="right">124</td>
+<td align="right">3514</td>
+<td align="right">0.0352874</td>
+</tr>
+<tr class="even">
+<td align="left">generalelectric</td>
+<td align="left">ge</td>
+<td align="right">762</td>
+<td align="right">21945</td>
+<td align="right">0.0347232</td>
+</tr>
+<tr class="odd">
+<td align="left">VW</td>
+<td align="left">dm</td>
+<td align="right">1142</td>
+<td align="right">33044</td>
+<td align="right">0.0345600</td>
+</tr>
+<tr class="even">
+<td align="left">PlayStation</td>
+<td align="left">ps4</td>
+<td align="right">690</td>
+<td align="right">21206</td>
+<td align="right">0.0325380</td>
+</tr>
+<tr class="odd">
+<td align="left">IKEAUSA</td>
+<td align="left">#ikea</td>
+<td align="right">725</td>
+<td align="right">22475</td>
+<td align="right">0.0322581</td>
+</tr>
+<tr class="even">
+<td align="left">LEGO_Group</td>
+<td align="left">happy</td>
+<td align="right">1927</td>
+<td align="right">61383</td>
+<td align="right">0.0313931</td>
+</tr>
+<tr class="odd">
+<td align="left">Cisco</td>
+<td align="left">cisco</td>
+<td align="right">524</td>
+<td align="right">16917</td>
+<td align="right">0.0309748</td>
+</tr>
+<tr class="even">
+<td align="left">SAP</td>
+<td align="left">sap</td>
+<td align="right">1111</td>
+<td align="right">36030</td>
+<td align="right">0.0308354</td>
+</tr>
+<tr class="odd">
+<td align="left">Oracle</td>
+<td align="left">#cloud</td>
+<td align="right">130</td>
+<td align="right">4224</td>
+<td align="right">0.0307765</td>
+</tr>
+<tr class="even">
+<td align="left">McDonalds</td>
+<td align="left">hope</td>
+<td align="right">4334</td>
+<td align="right">141156</td>
+<td align="right">0.0307036</td>
+</tr>
+<tr class="odd">
+<td align="left">thomsonreuters</td>
+<td align="left">explore</td>
+<td align="right">283</td>
+<td align="right">9281</td>
+<td align="right">0.0304924</td>
+</tr>
+<tr class="even">
+<td align="left">CaterpillarInc</td>
+<td align="left">cat</td>
+<td align="right">976</td>
+<td align="right">32161</td>
+<td align="right">0.0303473</td>
+</tr>
+<tr class="odd">
+<td align="left">Cartier</td>
+<td align="left">cartier</td>
+<td align="right">434</td>
+<td align="right">14352</td>
+<td align="right">0.0302397</td>
+</tr>
+<tr class="even">
+<td align="left">intel</td>
+<td align="left">intel</td>
+<td align="right">668</td>
+<td align="right">22658</td>
+<td align="right">0.0294819</td>
+</tr>
+<tr class="odd">
+<td align="left">Danone</td>
+<td align="left">danone</td>
+<td align="right">147</td>
+<td align="right">5218</td>
+<td align="right">0.0281717</td>
+</tr>
+<tr class="even">
+<td align="left">HSBC</td>
+<td align="left">#hsbc</td>
+<td align="right">295</td>
+<td align="right">10533</td>
+<td align="right">0.0280072</td>
+</tr>
+<tr class="odd">
+<td align="left">HomeDepot</td>
+<td align="left">share</td>
+<td align="right">314</td>
+<td align="right">11450</td>
+<td align="right">0.0274236</td>
+</tr>
+<tr class="even">
+<td align="left">Sony</td>
+<td align="left">#lostinmusic</td>
+<td align="right">78</td>
+<td align="right">2866</td>
+<td align="right">0.0272156</td>
+</tr>
+<tr class="odd">
+<td align="left">Etsy</td>
+<td align="left">etsy</td>
+<td align="right">672</td>
+<td align="right">24872</td>
+<td align="right">0.0270183</td>
+</tr>
+<tr class="even">
+<td align="left">pepsi</td>
+<td align="left">consumer</td>
+<td align="right">642</td>
+<td align="right">23817</td>
+<td align="right">0.0269555</td>
+</tr>
+<tr class="odd">
+<td align="left">adidasoriginals</td>
+<td align="left">#nmd</td>
+<td align="right">677</td>
+<td align="right">25202</td>
+<td align="right">0.0268629</td>
+</tr>
+<tr class="even">
+<td align="left">Delta</td>
+<td align="left">dm</td>
+<td align="right">4969</td>
+<td align="right">186939</td>
+<td align="right">0.0265809</td>
+</tr>
+<tr class="odd">
+<td align="left">FedEx</td>
+<td align="left">team</td>
+<td align="right">390</td>
+<td align="right">15045</td>
+<td align="right">0.0259222</td>
+</tr>
+<tr class="even">
+<td align="left">CHANEL</td>
+<td align="left">chanel</td>
+<td align="right">589</td>
+<td align="right">23305</td>
+<td align="right">0.0252735</td>
+</tr>
+<tr class="odd">
+<td align="left">SouthwestAir</td>
+<td align="left">dm</td>
+<td align="right">5707</td>
+<td align="right">228935</td>
+<td align="right">0.0249285</td>
+</tr>
+<tr class="even">
+<td align="left">Nike</td>
+<td align="left">#nikemag</td>
+<td align="right">615</td>
+<td align="right">24776</td>
+<td align="right">0.0248224</td>
+</tr>
+<tr class="odd">
+<td align="left">WellsFargo</td>
+<td align="left">bryan</td>
+<td align="right">238</td>
+<td align="right">9859</td>
+<td align="right">0.0241404</td>
+</tr>
+<tr class="even">
+<td align="left">LOrealParisUSA</td>
+<td align="left">al</td>
+<td align="right">471</td>
+<td align="right">20107</td>
+<td align="right">0.0234247</td>
+</tr>
+<tr class="odd">
+<td align="left">JohnDeere</td>
+<td align="left">deere</td>
+<td align="right">326</td>
+<td align="right">14188</td>
+<td align="right">0.0229772</td>
+</tr>
+<tr class="even">
+<td align="left">panasonic</td>
+<td align="left">panasonic</td>
+<td align="right">377</td>
+<td align="right">16452</td>
+<td align="right">0.0229151</td>
+</tr>
+<tr class="odd">
+<td align="left">UPS</td>
+<td align="left">enter</td>
+<td align="right">1721</td>
+<td align="right">75172</td>
+<td align="right">0.0228942</td>
+</tr>
+<tr class="even">
+<td align="left">UniqloUSA</td>
+<td align="left">dm</td>
+<td align="right">647</td>
+<td align="right">28556</td>
+<td align="right">0.0226572</td>
+</tr>
+<tr class="odd">
+<td align="left">SamsungMobileUS</td>
+<td align="left">team</td>
+<td align="right">1046</td>
+<td align="right">47402</td>
+<td align="right">0.0220666</td>
+</tr>
+<tr class="even">
+<td align="left">Starbucks</td>
+<td align="left">love</td>
+<td align="right">2423</td>
+<td align="right">113245</td>
+<td align="right">0.0213961</td>
+</tr>
+<tr class="odd">
+<td align="left">Walmart</td>
+<td align="left">rad</td>
+<td align="right">2352</td>
+<td align="right">110408</td>
+<td align="right">0.0213028</td>
+</tr>
+<tr class="even">
+<td align="left">Burberry</td>
+<td align="left">wearing</td>
+<td align="right">1086</td>
+<td align="right">51395</td>
+<td align="right">0.0211305</td>
+</tr>
+<tr class="odd">
+<td align="left">Toyota</td>
+<td align="left">toyota</td>
+<td align="right">308</td>
+<td align="right">15040</td>
+<td align="right">0.0204787</td>
+</tr>
+<tr class="even">
+<td align="left">gucci</td>
+<td align="left">#gucci</td>
+<td align="right">1059</td>
+<td align="right">51964</td>
+<td align="right">0.0203795</td>
+</tr>
+<tr class="odd">
+<td align="left">Fendi</td>
+<td align="left">collection</td>
+<td align="right">482</td>
+<td align="right">24022</td>
+<td align="right">0.0200649</td>
+</tr>
+<tr class="even">
+<td align="left">Microsoft</td>
+<td align="left">microsoft</td>
+<td align="right">58</td>
+<td align="right">2988</td>
+<td align="right">0.0194110</td>
+</tr>
+<tr class="odd">
+<td align="left">Philips</td>
+<td align="left">#wef17</td>
+<td align="right">72</td>
+<td align="right">3856</td>
+<td align="right">0.0186722</td>
+</tr>
+<tr class="even">
+<td align="left">netflix</td>
+<td align="left">netflix</td>
+<td align="right">109</td>
+<td align="right">5876</td>
+<td align="right">0.0185500</td>
+</tr>
+<tr class="odd">
+<td align="left">Gillette</td>
+<td align="left">happy</td>
+<td align="right">625</td>
+<td align="right">34973</td>
+<td align="right">0.0178709</td>
+</tr>
+<tr class="even">
+<td align="left">SamsungMobile</td>
+<td align="left">#dowhatyoucant</td>
+<td align="right">152</td>
+<td align="right">8543</td>
+<td align="right">0.0177923</td>
+</tr>
+<tr class="odd">
+<td align="left">HersheyCompany</td>
+<td align="left">hershey</td>
+<td align="right">293</td>
+<td align="right">16762</td>
+<td align="right">0.0174800</td>
+</tr>
+<tr class="even">
+<td align="left">RBC</td>
+<td align="left">rbc</td>
+<td align="right">158</td>
+<td align="right">9081</td>
+<td align="right">0.0173990</td>
+</tr>
+<tr class="odd">
+<td align="left">eBay</td>
+<td align="left">dm</td>
+<td align="right">573</td>
+<td align="right">33622</td>
+<td align="right">0.0170424</td>
+</tr>
+<tr class="even">
+<td align="left">woot</td>
+<td align="left">woot</td>
+<td align="right">430</td>
+<td align="right">26252</td>
+<td align="right">0.0163797</td>
+</tr>
+<tr class="odd">
+<td align="left">BestBuy</td>
+<td align="left">love</td>
+<td align="right">435</td>
+<td align="right">26941</td>
+<td align="right">0.0161464</td>
+</tr>
+<tr class="even">
+<td align="left">espn</td>
+<td align="left">espn</td>
+<td align="right">167</td>
+<td align="right">10645</td>
+<td align="right">0.0156881</td>
+</tr>
+<tr class="odd">
+<td align="left">Siemens</td>
+<td align="left">siemens</td>
+<td align="right">79</td>
+<td align="right">5357</td>
+<td align="right">0.0147471</td>
+</tr>
+<tr class="even">
+<td align="left">TMobile</td>
+<td align="left">love</td>
+<td align="right">2455</td>
+<td align="right">168432</td>
+<td align="right">0.0145756</td>
+</tr>
+<tr class="odd">
+<td align="left">Accenture</td>
+<td align="left">#ai</td>
+<td align="right">156</td>
+<td align="right">10925</td>
+<td align="right">0.0142792</td>
+</tr>
+<tr class="even">
+<td align="left">amazon</td>
+<td align="left">prime</td>
+<td align="right">259</td>
+<td align="right">19119</td>
+<td align="right">0.0135467</td>
+</tr>
+<tr class="odd">
+<td align="left">MercedesBenz</td>
+<td align="left">team</td>
+<td align="right">878</td>
+<td align="right">70654</td>
+<td align="right">0.0124268</td>
+</tr>
+<tr class="even">
+<td align="left">BankofAmerica</td>
+<td align="left">check</td>
+<td align="right">29</td>
+<td align="right">3178</td>
+<td align="right">0.0091252</td>
+</tr>
+<tr class="odd">
+<td align="left">FoxNews</td>
+<td align="left">trump</td>
+<td align="right">852</td>
+<td align="right">94479</td>
+<td align="right">0.0090179</td>
+</tr>
+</tbody>
+</table>
+<p>We look at a table of the most frequently used words in replies and non-replies.</p>
+<p>As expected, non-replies use words marketing the company’s products, such as “collection” for a collection of items or clothes, “watch” for promotional videos, “time” in anticipation for upcoming product releases, and so on.</p>
+<p>Replies include words indicative of customer management, using words like “happy” or “love” to show eagerness, and words like “sharing” or “hear” to acknowledge and engage with brand loyalists.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">NonReplyWord</th>
+<th align="left">ReplyWord</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">collection</td>
+<td align="left">dm</td>
+</tr>
+<tr class="even">
+<td align="left">watch</td>
+<td align="left">hear</td>
+</tr>
+<tr class="odd">
+<td align="left">time</td>
+<td align="left">love</td>
+</tr>
+<tr class="even">
+<td align="left">day</td>
+<td align="left">happy</td>
+</tr>
+<tr class="odd">
+<td align="left">live</td>
+<td align="left">send</td>
+</tr>
+<tr class="even">
+<td align="left">learn</td>
+<td align="left">glad</td>
+</tr>
+<tr class="odd">
+<td align="left">de</td>
+<td align="left">hope</td>
+</tr>
+<tr class="even">
+<td align="left">check</td>
+<td align="left">team</td>
+</tr>
+<tr class="odd">
+<td align="left">world</td>
+<td align="left">time</td>
+</tr>
+<tr class="even">
+<td align="left">shop</td>
+<td align="left">check</td>
+</tr>
+<tr class="odd">
+<td align="left">ready</td>
+<td align="left">message</td>
+</tr>
+<tr class="even">
+<td align="left">#louisvuitton</td>
+<td align="left">sharing</td>
+</tr>
+<tr class="odd">
+<td align="left">la</td>
+<td align="left">call</td>
+</tr>
+<tr class="even">
+<td align="left">campaign</td>
+<td align="left">details</td>
+</tr>
+<tr class="odd">
+<td align="left">wearing</td>
+<td align="left">day</td>
+</tr>
+<tr class="even">
+<td align="left">love</td>
+<td align="left">enjoy</td>
+</tr>
+<tr class="odd">
+<td align="left">summer</td>
+<td align="left">assist</td>
+</tr>
+<tr class="even">
+<td align="left">future</td>
+<td align="left">share</td>
+</tr>
+<tr class="odd">
+<td align="left">discover</td>
+<td align="left">contact</td>
+</tr>
+<tr class="even">
+<td align="left">happy</td>
+<td align="left">email</td>
+</tr>
+<tr class="odd">
+<td align="left">business</td>
+<td align="left">store</td>
+</tr>
+<tr class="even">
+<td align="left">week</td>
+<td align="left">hey</td>
+</tr>
+<tr class="odd">
+<td align="left">people</td>
+<td align="left">feedback</td>
+</tr>
+<tr class="even">
+<td align="left">game</td>
+<td align="left">follow</td>
+</tr>
+<tr class="odd">
+<td align="left">digital</td>
+<td align="left">account</td>
+</tr>
+<tr class="even">
+<td align="left">canon</td>
+<td align="left">service</td>
+</tr>
+<tr class="odd">
+<td align="left">join</td>
+<td align="left">experience</td>
+</tr>
+<tr class="even">
+<td align="left">home</td>
+<td align="left">info</td>
+</tr>
+<tr class="odd">
+<td align="left">free</td>
+<td align="left">sounds</td>
+</tr>
+<tr class="even">
+<td align="left">season</td>
+<td align="left">awesome</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="topic-modeling" class="section level2">
+<h2>Topic Modeling</h2>
+<div id="word-ratios" class="section level3">
+<h3>Word Ratios</h3>
+<p>If we’re creating topic models, we would expect natural topics to arise between replies and non-replies. We can first look at log ratios of word frequencies between replies and non-replies to identify words that are distinctive of replies and non-replies.</p>
+<pre><code>## # A tibble: 6,825 x 4
+##         word     no_reply        reply      logratio
+##        &lt;chr&gt;        &lt;dbl&gt;        &lt;dbl&gt;         &lt;dbl&gt;
+##  1      bear 8.929964e-05 8.930517e-05  6.199909e-05
+##  2  addition 9.196530e-05 9.205908e-05  1.019212e-03
+##  3     apple 1.999246e-04 2.006416e-04  3.580033e-03
+##  4      mark 4.278386e-04 4.296090e-04  4.129634e-03
+##  5     price 2.785616e-04 2.773575e-04 -4.331848e-03
+##  6   appears 7.597133e-05 7.632248e-05  4.611492e-03
+##  7      guys 2.772287e-04 2.785377e-04  4.710615e-03
+##  8 standards 6.930718e-05 6.963443e-05  4.710615e-03
+##  9    choose 2.985540e-04 3.005690e-04  6.726338e-03
+## 10    figure 7.064001e-05 7.002785e-05 -8.703762e-03
+## # ... with 6,815 more rows</code></pre>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="lda-latent-dirichlet-allocation" class="section level3">
+<h3>LDA (Latent Dirichlet allocation)</h3>
+<p>I tried modeling a Latent Dirichlet allocation (LDA) with 2, 3, and 4 topics. However, there didn’t seem to be a distinct separation of tweets - I was expecting a clearer line between sales, customer service, and possibly general announcements. With such a large dataset, it is more common to use a larger number of topics. Unfortunately, we don’t have computational power to fit that many topics. Stemming words helps efficiency somewhat, but modelling more than 4 topics still takes a long time.</p>
+<p>The reason we’re interested in topics in the first place is to find a natural clustering of what companies tweet. We can get a better understanding of how social media is used by companies, and how companies communicate with consumers in general.</p>
+<p>Let’s focus on just non-replies so that we can ignore many of the common words used in customer service, to improve efficiency, and to form topics specifically on how companies market to consumers. We remove tweets from bbva because we find that many of the common words from Spanish are muddling results.</p>
+<p>There isn’t a great statistical method for choosing and evaluating the number of topics in the model. We settle on 3 topics because each topic has a similar distribution of beta values.</p>
+<p>Unfortunately, the topics are very similar and have a lot of word overlap. I don’t see broad similaries between words within each topic.</p>
+</div>
+</div>
+<div id="linear-modelling" class="section level2">
+<h2>Linear Modelling</h2>
+<p>We can try to find covariates that correspond to more popular tweets, using either favorites or retweets as an outcome measure. Specifically, we’re interested in whether using positive or negative words can influence the popularity of a tweet, whether by using stronger words or by tapping an emotional appeal. We remove replies because they aren’t given as much exposure as regular tweets.</p>
+<p>From a basic plot of sentiment score against retweets, it seems that using negative words can increase the number of retweets.</p>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>Positive and negative word frequencies are not normally distributed and very few values. We will subset our dataset to only include tweets with 4 or less positive words, and 3 or less negative words because higher values have larger variance and leverage, which would make our estimates unstable. We also use both variables as categorical variables to circumvent assumptions of normality.</p>
+<p>We also remove tweets by BBVA to reduce noise from Spanish tweets.</p>
+<pre><code>## positive
+##     0     1     2     3     4     5     6     7 
+## 96550 42322 11726  2468   407    63     9     1</code></pre>
+<pre><code>## negative
+##      0      1      2      3      4      5     13 
+## 129865  19921   3189    476     84     10      1</code></pre>
+<p>We also find a correlation coefficient of 0.94 between log retweets and favorites, so we don’t expect too much of a difference when using them as outcome measures. It also wouldn’t make sense to use either as a covariate because they’re both measuring the same construct - how “large” a tweet is.</p>
+<p>We fit a linear regression model with log retweets as a response variable. We include covariates for the number of positive words used (<code>positive</code>), the number of negative words used (<code>negative</code>), and their interaction (<code>positive:negative</code>). We also included company and monthly time fixed effects to control for company popularity and the overall popularity of Twitter over time.</p>
+<p>In general, it seems that positive and negative words increase a tweet’s popularity. All of the estimates for positive words are positive, and the values of coefficients increase as the number of positive words increases. The model predicts tweets with two positive words are more popular than tweets with one positive word, and the same goes for 3 vs. 2 words. Interestingly, a single negative word is no different from a tweet without any positive or negative words. But greater numbers of negative words are related to more popular tweets (although our sample is too small for tweets with three negative words).</p>
+<p>Additionally, the interactions between positive and negative words also produce generally positive estimates (save for a few terms without explanatory power). That means that adding positive or negative words will tend to give you more popular tweets in general.</p>
+<p>To interpret coefficients explicitly, our model predicat that going from no emotional words to a single positive word in a tweet would give a 1.8% increase in retweets. Going from no emotional words to two positive words would give a 5.2% increase in retweets.</p>
+<p>The model had an adjusted R2 of 0.6655 (not shown). That is surprisingly large, but it mostly due to the model’s fixed effects.</p>
+<pre><code>## Call
+## lm(formula = logRTs ~ positive * negative + screenName + as.factor(year) * 
+##     as.factor(month), data = all)
+## 
+## Residuals
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## -5.93872 -0.54751 -0.02858  0.00000  0.49685  8.72160 
+## 
+##                          Estimate  Std. Error     t value     Pr(&gt;|t|)
+## positive1            0.0182643761 0.006397401  2.85496827 4.304702e-03
+## positive2            0.0504973331 0.010503731  4.80756174 1.529297e-06
+## positive3            0.0712598173 0.021592363  3.30023246 9.662726e-04
+## positive4            0.0652722446 0.052912237  1.23359451 2.173560e-01
+## negative1            0.0003227861 0.009542489  0.03382620 9.730158e-01
+## negative2            0.0488107420 0.021398143  2.28107374 2.254548e-02
+## negative3            0.0686248547 0.054064516  1.26931413 2.043310e-01
+## positive1:negative1  0.0437903393 0.017491353  2.50354209 1.229676e-02
+## positive2:negative1  0.0634132528 0.031754029  1.99701438 4.582542e-02
+## positive3:negative1  0.0253639888 0.070422476  0.36016895 7.187213e-01
+## positive4:negative1 -0.0105543836 0.165782723 -0.06366395 9.492379e-01
+## positive1:negative2  0.0167579476 0.043353213  0.38654454 6.990940e-01
+## positive2:negative2 -0.1515322161 0.083870560 -1.80673905 7.080498e-02
+## positive3:negative2  0.0599764551 0.152579014  0.39308456 6.942576e-01
+## positive4:negative2  0.4188726456 0.319224771  1.31215583 1.894696e-01
+## positive1:negative3 -0.0858114735 0.109020369 -0.78711414 4.312163e-01
+## positive2:negative3  0.1820897578 0.234183544  0.77755147 4.368347e-01
+## positive3:negative3 -0.5411424611 0.499497698 -1.08337328 2.786445e-01
+## positive4:negative3  1.0271934957 0.994882018  1.03247770 3.018501e-01
+## 
+## Residual standard error: 0.992 on 150208 degrees of freedom
+## F-statistic: 1439.6 on 208 and 150208 DF, p-value: &lt;2e-16</code></pre>
+<p>We check for consistent effects by running the same linear regression except using log favorites as our response variable.</p>
+<p>Despite retweets and favorites being highly correlated, we find very different effects. We see that including positive words tends to increase favorites. While our coefficients are larger, tweets tend to have more favorites, so we can’t compare effect sizes. However, including negative words tends to DECREASE the tweet’s number of favorites. Interaction terms suggest that favorites tend to increase by a small amount from increasing the number of emotional words.</p>
+<p>The model predicts that going from a tweet with no emotional words to one positive word would increase favorites by 4.9%. The model also predicts that adding a negative word to a tweet with no emotional words would decrease favorites by 4.0%.</p>
+<pre><code>## Call
+## lm(formula = logFavs ~ positive + negative + positive:negative + 
+##     screenName + as.factor(year) * as.factor(month), data = all)
+## 
+## Residuals
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## -7.28099 -0.52040 -0.01581  0.00000  0.50141  7.23914 
+## 
+##                        Estimate  Std. Error     t value     Pr(&gt;|t|)
+## positive1            0.04821927 0.006620191  7.28366657 3.264495e-13
+## positive2            0.09868123 0.010869525  9.07870716 1.111513e-19
+## positive3            0.13325140 0.022344321  5.96354678 2.473697e-09
+## positive4            0.14586553 0.054754914  2.66397139 7.723237e-03
+## negative1           -0.04059914 0.009874808 -4.11138540 3.935008e-05
+## negative2           -0.04384301 0.022143337 -1.97996381 4.770942e-02
+## negative3           -0.11932656 0.055947322 -2.13283768 3.293966e-02
+## positive1:negative1  0.06243813 0.018100493  3.44952669 5.617243e-04
+## positive2:negative1  0.08246570 0.032859869  2.50961755 1.208724e-02
+## positive3:negative1  0.07828885 0.072874950  1.07429030 2.826943e-01
+## positive4:negative1  0.02419487 0.171556135  0.14103179 8.878450e-01
+## positive1:negative2  0.08212994 0.044862996  1.83068340 6.714979e-02
+## positive2:negative2 -0.08527476 0.086791367 -0.98252583 3.258424e-01
+## positive3:negative2  0.05910958 0.157892605  0.37436572 7.081328e-01
+## positive4:negative2  0.30235359 0.330341829  0.91527491 3.600488e-01
+## positive1:negative3 -0.00152504 0.112817022 -0.01351782 9.892147e-01
+## positive2:negative3  0.35921863 0.242339026  1.48229789 1.382631e-01
+## positive3:negative3 -0.23519889 0.516892791 -0.45502452 6.490923e-01
+## positive4:negative3  0.74433527 1.029528955  0.72298624 4.696895e-01
+## 
+## Residual standard error: 1.026 on 150208 degrees of freedom
+## F-statistic: 1764.42 on 208 and 150208 DF, p-value: &lt;2e-16</code></pre>
+<p>We can test for discrepancies in effects between retweets and favorites by using the log ratio of retweets and favorites as a response variable. To make them comparable, we rescale both variables by normalizing them (subtracting by the mean and dividing by the standard deviation). Both are approximately normal (by eyeballing), but slightly right skewed.</p>
+<pre><code>## 
+## Call:
+## lm(formula = logratio ~ positive + negative + positive:negative + 
+##     screenName + as.factor(year):as.factor(month), data = all)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -3.08645 -0.14523 -0.00501  0.13936  2.19124 
+## 
+## Coefficients: (20 not defined because of singularities)
+##                                         Estimate Std. Error t value
+## (Intercept)                             0.145931   0.007698  18.956
+## positive1                              -0.014687   0.001670  -8.793
+## positive2                              -0.022406   0.002743  -8.170
+## positive3                              -0.028463   0.005638  -5.049
+## positive4                              -0.038584   0.013815  -2.793
+## negative1                               0.021523   0.002492   8.638
+## negative2                               0.051507   0.005587   9.219
+## negative3                               0.102730   0.014116   7.277
+## screenNameadidasoriginals              -0.310453   0.010185 -30.483
+## screenNameAEO                          -0.785026   0.009411 -83.416
+## screenNameAllianz                       0.038213   0.010809   3.535
+## screenNameamazon                       -0.295643   0.010234 -28.888
+## screenNameAmericanExpress              -0.293320   0.010353 -28.332
+## screenNameAndroid                      -0.308323   0.011898 -25.915
+## screenNameATT                          -0.269130   0.012023 -22.385
+## screenNameAudi                         -0.463898   0.014587 -31.803
+## screenNameBankofAmerica                -0.283033   0.014781 -19.148
+## screenNameBASF                         -0.059589   0.011279  -5.283
+## screenNameBestBuy                      -0.259283   0.011008 -23.555
+## screenNameBlackBerry                   -0.218889   0.010462 -20.922
+## screenNameBMW                          -0.403992   0.014445 -27.968
+## screenNameBoeing                       -0.173211   0.015057 -11.503
+## screenNameBudweiser                    -0.270654   0.016459 -16.444
+## screenNameBurberry                     -0.428161   0.007865 -54.437
+## screenNameCanonUSA                     -0.450015   0.008754 -51.408
+## screenNameCartier                      -0.242240   0.010215 -23.714
+## screenNameCaterpillarInc               -0.415101   0.008310 -49.953
+## screenNameCHANEL                       -0.213705   0.009398 -22.740
+## screenNameChase                        -0.304564   0.011739 -25.944
+## screenNamechevrolet                    -0.400637   0.011070 -36.192
+## screenNameCisco                         0.031793   0.009309   3.415
+## screenNameCiti                         -0.106855   0.010498 -10.179
+## screenNameCoach                        -0.404154   0.013453 -30.041
+## screenNameCocaCola                     -0.295873   0.019275 -15.350
+## screenNameColgate                      -0.136048   0.018058  -7.534
+## screenNamecorona                       -0.241267   0.011633 -20.739
+## screenNameCostco                       -0.313569   0.091836  -3.414
+## screenNameDanone                       -0.192385   0.012684 -15.168
+## screenNameDelta                        -0.166527   0.029633  -5.620
+## screenNameDisney                       -0.343514   0.009606 -35.762
+## screenNameeBay                         -0.253477   0.010575 -23.969
+## screenNameespn                         -0.278516   0.009381 -29.689
+## screenNameEtsy                         -0.347496   0.008358 -41.578
+## screenNamefacebook                     -0.389847   0.026383 -14.777
+## screenNameFedEx                        -0.387815   0.010128 -38.290
+## screenNameFendi                        -0.238032   0.008369 -28.441
+## screenNameFord                         -0.150754   0.017136  -8.797
+## screenNameFoxNews                      -0.154678   0.007434 -20.807
+## screenNameFritolay                     -0.342840   0.015971 -21.467
+## screenNameGap                          -0.478576   0.012153 -39.380
+## screenNamegeneralelectric              -0.114992   0.010048 -11.445
+## screenNameGillette                     -0.369154   0.009150 -40.344
+## screenNameGoogle                       -0.306353   0.010417 -29.409
+## screenNamegucci                        -0.376441   0.007796 -48.289
+## screenNameHeineken                     -0.094198   0.010208  -9.228
+## screenNameHermes_Paris                 -0.231172   0.018807 -12.292
+## screenNameHersheyCompany               -0.286880   0.009494 -30.217
+## screenNamehm                           -0.623924   0.008648 -72.148
+## screenNameHomeDepot                    -0.245657   0.010432 -23.548
+## screenNameHonda                        -0.320994   0.009329 -34.409
+## screenNameHP                           -0.158141   0.011456 -13.804
+## screenNameHSBC                         -0.198552   0.009991 -19.872
+## screenNameHyundai                      -0.174048   0.013398 -12.991
+## screenNameIBM                           0.223911   0.011960  18.722
+## screenNameIKEAUSA                      -0.509785   0.008597 -59.298
+## screenNameintel                        -0.287396   0.011068 -25.967
+## screenNameJohnDeere                    -0.541891   0.009715 -55.778
+## screenNamejpmorgan                     -0.232250   0.010256 -22.645
+## screenNameKelloggsUS                   -0.495972   0.013014 -38.111
+## screenNamekraftfoods                   -0.283076   0.017891 -15.822
+## screenNameLEGO_Group                   -0.372381   0.011760 -31.665
+## screenNameLexus                        -0.468471   0.010189 -45.978
+## screenNameLOrealParisUSA               -0.700106   0.009140 -76.596
+## screenNameLouisVuitton                 -0.313955   0.008424 -37.268
+## screenNamemarcjacobs                   -0.509008   0.009762 -52.140
+## screenNameMastercard                   -0.404574   0.013877 -29.154
+## screenNameMcDonalds                    -0.241695   0.021610 -11.184
+## screenNameMercedesBenz                 -0.489835   0.008620 -56.824
+## screenNameMicrosoft                    -0.152740   0.014633 -10.438
+## screenNameNESCAFE                      -0.299906   0.013568 -22.104
+## screenNameNestle                       -0.287287   0.010782 -26.645
+## screenNamenetflix                      -0.422680   0.011544 -36.616
+## screenNameNike                         -0.131671   0.022150  -5.945
+## screenNameNissan                       -0.461560   0.011058 -41.742
+## screenNameOracle                        0.014645   0.012567   1.165
+## screenNamePampers                      -0.225799   0.021065 -10.719
+## screenNamepanasonic                    -0.223341   0.008892 -25.118
+## screenNamepepsi                        -0.355575   0.010398 -34.196
+## screenNamePhilips                      -0.269492   0.014133 -19.068
+## screenNamePlayStation                  -0.361915   0.008755 -41.337
+## screenNamePorsche                      -0.341072   0.013679 -24.935
+## screenNamePrada                        -0.295783   0.008779 -33.690
+## screenNameRBC                          -0.112066   0.011934  -9.390
+## screenNameredbull                      -0.425983   0.018959 -22.468
+## screenNameRockstarGames                -0.376908   0.013817 -27.278
+## screenNameSamsungMobile                -0.351369   0.010353 -33.938
+## screenNameSamsungMobileUS              -0.578562   0.011348 -50.983
+## screenNameSantanderBankUS              -0.069610   0.014311  -4.864
+## screenNameSAP                           0.126834   0.007888  16.080
+## screenNameSiemens                      -0.104706   0.013466  -7.775
+## screenNameSony                         -0.583032   0.015578 -37.427
+## screenNameSouthwestAir                 -0.460967   0.023796 -19.372
+## screenNameStarbucks                    -0.385402   0.016726 -23.042
+## screenNameSUBWAY                       -0.394241   0.015602 -25.269
+## screenNameTarget                       -0.333022   0.016268 -20.471
+## screenNamethomsonreuters                0.110832   0.010326  10.733
+## screenNameTMobile                      -0.426610   0.014726 -28.969
+## screenNameTOMS                         -0.178692   0.008912 -20.050
+## screenNameToyota                       -0.195120   0.011719 -16.649
+## screenNameUniqloUSA                    -0.443753   0.009571 -46.362
+## screenNameUPS                          -0.275679   0.011376 -24.233
+## screenNameverizon                      -0.292722   0.014686 -19.932
+## screenNameVictoriasSecret              -0.566920   0.010106 -56.096
+## screenNameVisa                         -0.368106   0.017644 -20.863
+## screenNameVW                           -0.351205   0.011201 -31.353
+## screenNameWalmart                      -0.309230   0.012427 -24.884
+## screenNameWellsFargo                   -0.222444   0.013929 -15.970
+## screenNameWholeFoods                   -0.261267   0.010870 -24.035
+## screenNamewoot                         -0.362277   0.008469 -42.777
+## screenNameXbox                         -0.372072   0.010402 -35.768
+## screenNameZARA                         -0.549277   0.013401 -40.988
+## positive1:negative1                    -0.007272   0.004567  -1.592
+## positive2:negative1                    -0.006352   0.008291  -0.766
+## positive3:negative1                    -0.026348   0.018387  -1.433
+## positive4:negative1                    -0.018870   0.043286  -0.436
+## positive1:negative2                    -0.033386   0.011320  -2.949
+## positive2:negative2                    -0.043566   0.021899  -1.989
+## positive3:negative2                     0.003918   0.039839   0.098
+## positive4:negative2                     0.085411   0.083350   1.025
+## positive1:negative3                    -0.049246   0.028465  -1.730
+## positive2:negative3                    -0.082570   0.061146  -1.350
+## positive3:negative3                    -0.192012   0.130420  -1.472
+## positive4:negative3                     0.207939   0.259765   0.800
+## as.factor(year)2011:as.factor(month)1         NA         NA      NA
+## as.factor(year)2012:as.factor(month)1   1.322432   0.055642  23.767
+## as.factor(year)2013:as.factor(month)1   0.884649   0.038020  23.268
+## as.factor(year)2014:as.factor(month)1   0.671985   0.021070  31.893
+## as.factor(year)2015:as.factor(month)1   0.530239   0.012609  42.054
+## as.factor(year)2016:as.factor(month)1   0.275806   0.006692  41.216
+## as.factor(year)2017:as.factor(month)1   0.155796   0.004687  33.237
+## as.factor(year)2018:as.factor(month)1   0.006724   0.004716   1.426
+## as.factor(year)2011:as.factor(month)2         NA         NA      NA
+## as.factor(year)2012:as.factor(month)2   1.236237   0.047787  25.870
+## as.factor(year)2013:as.factor(month)2   0.880261   0.032589  27.011
+## as.factor(year)2014:as.factor(month)2   0.673527   0.022052  30.542
+## as.factor(year)2015:as.factor(month)2   0.458846   0.010680  42.965
+## as.factor(year)2016:as.factor(month)2   0.242312   0.006146  39.425
+## as.factor(year)2017:as.factor(month)2   0.119439   0.004253  28.086
+## as.factor(year)2018:as.factor(month)2         NA         NA      NA
+## as.factor(year)2011:as.factor(month)3         NA         NA      NA
+## as.factor(year)2012:as.factor(month)3   1.280410   0.042583  30.068
+## as.factor(year)2013:as.factor(month)3   0.882593   0.034485  25.594
+## as.factor(year)2014:as.factor(month)3   0.669126   0.016723  40.013
+## as.factor(year)2015:as.factor(month)3   0.521958   0.010769  48.469
+## as.factor(year)2016:as.factor(month)3   0.233717   0.006175  37.851
+## as.factor(year)2017:as.factor(month)3   0.118095   0.004168  28.337
+## as.factor(year)2018:as.factor(month)3         NA         NA      NA
+## as.factor(year)2011:as.factor(month)4         NA         NA      NA
+## as.factor(year)2012:as.factor(month)4   1.284115   0.056932  22.555
+## as.factor(year)2013:as.factor(month)4   0.844103   0.027699  30.475
+## as.factor(year)2014:as.factor(month)4   0.593322   0.020792  28.536
+## as.factor(year)2015:as.factor(month)4   0.463872   0.009915  46.784
+## as.factor(year)2016:as.factor(month)4   0.229831   0.006011  38.237
+## as.factor(year)2017:as.factor(month)4   0.126041   0.004325  29.144
+## as.factor(year)2018:as.factor(month)4         NA         NA      NA
+## as.factor(year)2011:as.factor(month)5         NA         NA      NA
+## as.factor(year)2012:as.factor(month)5   1.313944   0.053312  24.646
+## as.factor(year)2013:as.factor(month)5   0.771367   0.020973  36.779
+## as.factor(year)2014:as.factor(month)5   0.574585   0.015126  37.987
+## as.factor(year)2015:as.factor(month)5   0.428031   0.009818  43.597
+## as.factor(year)2016:as.factor(month)5   0.196043   0.005730  34.216
+## as.factor(year)2017:as.factor(month)5   0.124711   0.004576  27.252
+## as.factor(year)2018:as.factor(month)5         NA         NA      NA
+## as.factor(year)2011:as.factor(month)6         NA         NA      NA
+## as.factor(year)2012:as.factor(month)6   1.267133   0.035918  35.279
+## as.factor(year)2013:as.factor(month)6   0.829147   0.033622  24.661
+## as.factor(year)2014:as.factor(month)6   0.596919   0.016933  35.251
+## as.factor(year)2015:as.factor(month)6   0.413971   0.008895  46.542
+## as.factor(year)2016:as.factor(month)6   0.194936   0.005533  35.229
+## as.factor(year)2017:as.factor(month)6   0.075961   0.004247  17.886
+## as.factor(year)2018:as.factor(month)6         NA         NA      NA
+## as.factor(year)2011:as.factor(month)7         NA         NA      NA
+## as.factor(year)2012:as.factor(month)7   1.199544   0.055652  21.554
+## as.factor(year)2013:as.factor(month)7   0.889600   0.038649  23.018
+## as.factor(year)2014:as.factor(month)7   0.658009   0.015579  42.236
+## as.factor(year)2015:as.factor(month)7   0.360972   0.009833  36.710
+## as.factor(year)2016:as.factor(month)7   0.140229   0.005560  25.223
+## as.factor(year)2017:as.factor(month)7   0.065150   0.004457  14.619
+## as.factor(year)2018:as.factor(month)7         NA         NA      NA
+## as.factor(year)2011:as.factor(month)8         NA         NA      NA
+## as.factor(year)2012:as.factor(month)8   1.138129   0.055652  20.451
+## as.factor(year)2013:as.factor(month)8   0.995003   0.037806  26.319
+## as.factor(year)2014:as.factor(month)8   0.582786   0.022239  26.206
+## as.factor(year)2015:as.factor(month)8   0.376973   0.009399  40.110
+## as.factor(year)2016:as.factor(month)8   0.153186   0.005365  28.555
+## as.factor(year)2017:as.factor(month)8   0.062399   0.004369  14.282
+## as.factor(year)2018:as.factor(month)8         NA         NA      NA
+## as.factor(year)2011:as.factor(month)9   1.073462   0.105939  10.133
+## as.factor(year)2012:as.factor(month)9   1.066779   0.048589  21.955
+## as.factor(year)2013:as.factor(month)9   0.895223   0.030208  29.636
+## as.factor(year)2014:as.factor(month)9   0.641276   0.013111  48.912
+## as.factor(year)2015:as.factor(month)9   0.375601   0.007261  51.727
+## as.factor(year)2016:as.factor(month)9   0.171961   0.005215  32.976
+## as.factor(year)2017:as.factor(month)9   0.045375   0.004213  10.771
+## as.factor(year)2018:as.factor(month)9         NA         NA      NA
+## as.factor(year)2011:as.factor(month)10  0.996401   0.091815  10.852
+## as.factor(year)2012:as.factor(month)10  1.089923   0.029097  37.459
+## as.factor(year)2013:as.factor(month)10  0.815118   0.024960  32.657
+## as.factor(year)2014:as.factor(month)10  0.680507   0.014013  48.563
+## as.factor(year)2015:as.factor(month)10  0.363632   0.006809  53.403
+## as.factor(year)2016:as.factor(month)10  0.157125   0.005139  30.576
+## as.factor(year)2017:as.factor(month)10  0.047969   0.004316  11.113
+## as.factor(year)2018:as.factor(month)10        NA         NA      NA
+## as.factor(year)2011:as.factor(month)11  1.097669   0.054439  20.163
+## as.factor(year)2012:as.factor(month)11  1.050070   0.042044  24.975
+## as.factor(year)2013:as.factor(month)11  0.658592   0.020771  31.708
+## as.factor(year)2014:as.factor(month)11  0.619332   0.013858  44.692
+## as.factor(year)2015:as.factor(month)11  0.309045   0.007087  43.607
+## as.factor(year)2016:as.factor(month)11  0.147111   0.005022  29.295
+## as.factor(year)2017:as.factor(month)11  0.041020   0.004346   9.440
+## as.factor(year)2018:as.factor(month)11        NA         NA      NA
+## as.factor(year)2011:as.factor(month)12  1.192151   0.043714  27.271
+## as.factor(year)2012:as.factor(month)12  1.068261   0.059810  17.861
+## as.factor(year)2013:as.factor(month)12  0.768784   0.020855  36.863
+## as.factor(year)2014:as.factor(month)12  0.571145   0.013361  42.747
+## as.factor(year)2015:as.factor(month)12  0.292804   0.006819  42.942
+## as.factor(year)2016:as.factor(month)12  0.144393   0.004910  29.407
+## as.factor(year)2017:as.factor(month)12        NA         NA      NA
+## as.factor(year)2018:as.factor(month)12        NA         NA      NA
+##                                        Pr(&gt;|t|)    
+## (Intercept)                             &lt; 2e-16 ***
+## positive1                               &lt; 2e-16 ***
+## positive2                              3.11e-16 ***
+## positive3                              4.45e-07 ***
+## positive4                              0.005226 ** 
+## negative1                               &lt; 2e-16 ***
+## negative2                               &lt; 2e-16 ***
+## negative3                              3.42e-13 ***
+## screenNameadidasoriginals               &lt; 2e-16 ***
+## screenNameAEO                           &lt; 2e-16 ***
+## screenNameAllianz                      0.000407 ***
+## screenNameamazon                        &lt; 2e-16 ***
+## screenNameAmericanExpress               &lt; 2e-16 ***
+## screenNameAndroid                       &lt; 2e-16 ***
+## screenNameATT                           &lt; 2e-16 ***
+## screenNameAudi                          &lt; 2e-16 ***
+## screenNameBankofAmerica                 &lt; 2e-16 ***
+## screenNameBASF                         1.27e-07 ***
+## screenNameBestBuy                       &lt; 2e-16 ***
+## screenNameBlackBerry                    &lt; 2e-16 ***
+## screenNameBMW                           &lt; 2e-16 ***
+## screenNameBoeing                        &lt; 2e-16 ***
+## screenNameBudweiser                     &lt; 2e-16 ***
+## screenNameBurberry                      &lt; 2e-16 ***
+## screenNameCanonUSA                      &lt; 2e-16 ***
+## screenNameCartier                       &lt; 2e-16 ***
+## screenNameCaterpillarInc                &lt; 2e-16 ***
+## screenNameCHANEL                        &lt; 2e-16 ***
+## screenNameChase                         &lt; 2e-16 ***
+## screenNamechevrolet                     &lt; 2e-16 ***
+## screenNameCisco                        0.000637 ***
+## screenNameCiti                          &lt; 2e-16 ***
+## screenNameCoach                         &lt; 2e-16 ***
+## screenNameCocaCola                      &lt; 2e-16 ***
+## screenNameColgate                      4.95e-14 ***
+## screenNamecorona                        &lt; 2e-16 ***
+## screenNameCostco                       0.000639 ***
+## screenNameDanone                        &lt; 2e-16 ***
+## screenNameDelta                        1.92e-08 ***
+## screenNameDisney                        &lt; 2e-16 ***
+## screenNameeBay                          &lt; 2e-16 ***
+## screenNameespn                          &lt; 2e-16 ***
+## screenNameEtsy                          &lt; 2e-16 ***
+## screenNamefacebook                      &lt; 2e-16 ***
+## screenNameFedEx                         &lt; 2e-16 ***
+## screenNameFendi                         &lt; 2e-16 ***
+## screenNameFord                          &lt; 2e-16 ***
+## screenNameFoxNews                       &lt; 2e-16 ***
+## screenNameFritolay                      &lt; 2e-16 ***
+## screenNameGap                           &lt; 2e-16 ***
+## screenNamegeneralelectric               &lt; 2e-16 ***
+## screenNameGillette                      &lt; 2e-16 ***
+## screenNameGoogle                        &lt; 2e-16 ***
+## screenNamegucci                         &lt; 2e-16 ***
+## screenNameHeineken                      &lt; 2e-16 ***
+## screenNameHermes_Paris                  &lt; 2e-16 ***
+## screenNameHersheyCompany                &lt; 2e-16 ***
+## screenNamehm                            &lt; 2e-16 ***
+## screenNameHomeDepot                     &lt; 2e-16 ***
+## screenNameHonda                         &lt; 2e-16 ***
+## screenNameHP                            &lt; 2e-16 ***
+## screenNameHSBC                          &lt; 2e-16 ***
+## screenNameHyundai                       &lt; 2e-16 ***
+## screenNameIBM                           &lt; 2e-16 ***
+## screenNameIKEAUSA                       &lt; 2e-16 ***
+## screenNameintel                         &lt; 2e-16 ***
+## screenNameJohnDeere                     &lt; 2e-16 ***
+## screenNamejpmorgan                      &lt; 2e-16 ***
+## screenNameKelloggsUS                    &lt; 2e-16 ***
+## screenNamekraftfoods                    &lt; 2e-16 ***
+## screenNameLEGO_Group                    &lt; 2e-16 ***
+## screenNameLexus                         &lt; 2e-16 ***
+## screenNameLOrealParisUSA                &lt; 2e-16 ***
+## screenNameLouisVuitton                  &lt; 2e-16 ***
+## screenNamemarcjacobs                    &lt; 2e-16 ***
+## screenNameMastercard                    &lt; 2e-16 ***
+## screenNameMcDonalds                     &lt; 2e-16 ***
+## screenNameMercedesBenz                  &lt; 2e-16 ***
+## screenNameMicrosoft                     &lt; 2e-16 ***
+## screenNameNESCAFE                       &lt; 2e-16 ***
+## screenNameNestle                        &lt; 2e-16 ***
+## screenNamenetflix                       &lt; 2e-16 ***
+## screenNameNike                         2.78e-09 ***
+## screenNameNissan                        &lt; 2e-16 ***
+## screenNameOracle                       0.243860    
+## screenNamePampers                       &lt; 2e-16 ***
+## screenNamepanasonic                     &lt; 2e-16 ***
+## screenNamepepsi                         &lt; 2e-16 ***
+## screenNamePhilips                       &lt; 2e-16 ***
+## screenNamePlayStation                   &lt; 2e-16 ***
+## screenNamePorsche                       &lt; 2e-16 ***
+## screenNamePrada                         &lt; 2e-16 ***
+## screenNameRBC                           &lt; 2e-16 ***
+## screenNameredbull                       &lt; 2e-16 ***
+## screenNameRockstarGames                 &lt; 2e-16 ***
+## screenNameSamsungMobile                 &lt; 2e-16 ***
+## screenNameSamsungMobileUS               &lt; 2e-16 ***
+## screenNameSantanderBankUS              1.15e-06 ***
+## screenNameSAP                           &lt; 2e-16 ***
+## screenNameSiemens                      7.56e-15 ***
+## screenNameSony                          &lt; 2e-16 ***
+## screenNameSouthwestAir                  &lt; 2e-16 ***
+## screenNameStarbucks                     &lt; 2e-16 ***
+## screenNameSUBWAY                        &lt; 2e-16 ***
+## screenNameTarget                        &lt; 2e-16 ***
+## screenNamethomsonreuters                &lt; 2e-16 ***
+## screenNameTMobile                       &lt; 2e-16 ***
+## screenNameTOMS                          &lt; 2e-16 ***
+## screenNameToyota                        &lt; 2e-16 ***
+## screenNameUniqloUSA                     &lt; 2e-16 ***
+## screenNameUPS                           &lt; 2e-16 ***
+## screenNameverizon                       &lt; 2e-16 ***
+## screenNameVictoriasSecret               &lt; 2e-16 ***
+## screenNameVisa                          &lt; 2e-16 ***
+## screenNameVW                            &lt; 2e-16 ***
+## screenNameWalmart                       &lt; 2e-16 ***
+## screenNameWellsFargo                    &lt; 2e-16 ***
+## screenNameWholeFoods                    &lt; 2e-16 ***
+## screenNamewoot                          &lt; 2e-16 ***
+## screenNameXbox                          &lt; 2e-16 ***
+## screenNameZARA                          &lt; 2e-16 ***
+## positive1:negative1                    0.111341    
+## positive2:negative1                    0.443634    
+## positive3:negative1                    0.151878    
+## positive4:negative1                    0.662882    
+## positive1:negative2                    0.003185 ** 
+## positive2:negative2                    0.046656 *  
+## positive3:negative2                    0.921662    
+## positive4:negative2                    0.305494    
+## positive1:negative3                    0.083625 .  
+## positive2:negative3                    0.176893    
+## positive3:negative3                    0.140951    
+## positive4:negative3                    0.423430    
+## as.factor(year)2011:as.factor(month)1        NA    
+## as.factor(year)2012:as.factor(month)1   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)1   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)1   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)1   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)1   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)1   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)1  0.153917    
+## as.factor(year)2011:as.factor(month)2        NA    
+## as.factor(year)2012:as.factor(month)2   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)2   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)2   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)2   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)2   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)2   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)2        NA    
+## as.factor(year)2011:as.factor(month)3        NA    
+## as.factor(year)2012:as.factor(month)3   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)3   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)3   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)3   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)3   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)3   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)3        NA    
+## as.factor(year)2011:as.factor(month)4        NA    
+## as.factor(year)2012:as.factor(month)4   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)4   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)4   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)4   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)4   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)4   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)4        NA    
+## as.factor(year)2011:as.factor(month)5        NA    
+## as.factor(year)2012:as.factor(month)5   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)5   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)5   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)5   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)5   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)5   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)5        NA    
+## as.factor(year)2011:as.factor(month)6        NA    
+## as.factor(year)2012:as.factor(month)6   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)6   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)6   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)6   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)6   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)6   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)6        NA    
+## as.factor(year)2011:as.factor(month)7        NA    
+## as.factor(year)2012:as.factor(month)7   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)7   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)7   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)7   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)7   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)7   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)7        NA    
+## as.factor(year)2011:as.factor(month)8        NA    
+## as.factor(year)2012:as.factor(month)8   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)8   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)8   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)8   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)8   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)8   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)8        NA    
+## as.factor(year)2011:as.factor(month)9   &lt; 2e-16 ***
+## as.factor(year)2012:as.factor(month)9   &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)9   &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)9   &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)9   &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)9   &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)9   &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)9        NA    
+## as.factor(year)2011:as.factor(month)10  &lt; 2e-16 ***
+## as.factor(year)2012:as.factor(month)10  &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)10  &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)10  &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)10  &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)10  &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)10  &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)10       NA    
+## as.factor(year)2011:as.factor(month)11  &lt; 2e-16 ***
+## as.factor(year)2012:as.factor(month)11  &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)11  &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)11  &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)11  &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)11  &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)11  &lt; 2e-16 ***
+## as.factor(year)2018:as.factor(month)11       NA    
+## as.factor(year)2011:as.factor(month)12  &lt; 2e-16 ***
+## as.factor(year)2012:as.factor(month)12  &lt; 2e-16 ***
+## as.factor(year)2013:as.factor(month)12  &lt; 2e-16 ***
+## as.factor(year)2014:as.factor(month)12  &lt; 2e-16 ***
+## as.factor(year)2015:as.factor(month)12  &lt; 2e-16 ***
+## as.factor(year)2016:as.factor(month)12  &lt; 2e-16 ***
+## as.factor(year)2017:as.factor(month)12       NA    
+## as.factor(year)2018:as.factor(month)12       NA    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.2589 on 150208 degrees of freedom
+## Multiple R-squared:  0.429,  Adjusted R-squared:  0.4282 
+## F-statistic: 542.5 on 208 and 150208 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre><code>## Call
+## lm(formula = logratio ~ positive + negative + positive:negative + 
+##     screenName + as.factor(year):as.factor(month), data = all)
+## 
+## Residuals
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## -3.086446 -0.145230 -0.005011  0.000000  0.139363  2.191236 
+## 
+##                         Estimate  Std. Error     t value     Pr(&gt;|t|)
+## positive1           -0.014687050 0.001670370 -8.79269404 1.475127e-18
+## positive2           -0.022405767 0.002742538 -8.16971996 3.114745e-16
+## positive3           -0.028463209 0.005637794 -5.04864261 4.454788e-07
+## positive4           -0.038584092 0.013815455 -2.79282098 5.225721e-03
+## negative1            0.021523222 0.002491556  8.63846442 5.751811e-18
+## negative2            0.051507457 0.005587083  9.21902418 3.035264e-20
+## negative3            0.102730439 0.014116317  7.27742532 3.419027e-13
+## positive1:negative1 -0.007271627 0.004567015 -1.59220551 1.113406e-01
+## positive2:negative1 -0.006351523 0.008291019 -0.76607269 4.436343e-01
+## positive3:negative1 -0.026348004 0.018387401 -1.43293790 1.518777e-01
+## positive4:negative1 -0.018870093 0.043286088 -0.43593899 6.628816e-01
+## positive1:negative2 -0.033385799 0.011319581 -2.94938469 3.184564e-03
+## positive2:negative2 -0.043565831 0.021898714 -1.98942418 4.665621e-02
+## positive3:negative2  0.003917747 0.039838582  0.09834053 9.216620e-01
+## positive4:negative2  0.085410940 0.083350009  1.02472623 3.054940e-01
+## positive1:negative3 -0.049246313 0.028465362 -1.73004345 8.362457e-02
+## positive2:negative3 -0.082570410 0.061145632 -1.35038933 1.768932e-01
+## positive3:negative3 -0.192012205 0.130419508 -1.47226598 1.409512e-01
+## positive4:negative3  0.207938578 0.259765007  0.80048726 4.234298e-01
+## 
+## Residual standard error: 0.259 on 150208 degrees of freedom
+## F-statistic: 542.46 on 208 and 150208 DF, p-value: &lt;2e-16</code></pre>
+<p><img src="/post/2018-08-30-twitter-eda_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

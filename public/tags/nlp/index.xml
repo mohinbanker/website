@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Mohin Banker</title>
-    <link>/</link>
-    <description>Recent content on Mohin Banker</description>
+    <title>Nlp on Mohin Banker</title>
+    <link>/tags/nlp/</link>
+    <description>Recent content in Nlp on Mohin Banker</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Thu, 30 Aug 2018 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/nlp/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -19,15 +19,6 @@
       <guid>/2018/08/30/twitter-analysis/</guid>
       <description>Cleaning Data First, we read in the data and clean date-times and classify datatypes. Before, I mapped Unicode hex codes to emojis and symbols, but now realize that having these values isn’t very useful. Therefore, we remove all unrecognized symbols.
 Previously, I was replacing hex codes with their corresponding emojis. Credit to Kate Lyons and Jessica Peterka-Bonetta for developing a free dictionary for translating Unicode to emojis. Unfortunately, the literature on using emojis in sentiment analyses is sparse and unexplored.</description>
-    </item>
-    
-    <item>
-      <title>About</title>
-      <link>/about/</link>
-      <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
-      
-      <guid>/about/</guid>
-      <description>Hi! I&amp;rsquo;m a research assistant at the Bureau of Consumer Financial Protection. Generally, I&amp;rsquo;m interested in behavioral economics and data science. Right now, I&amp;rsquo;m using this website to experiment and learn more about web development, and hopefully post more about my work and interest in the future. If you&amp;rsquo;d like to contact me, please e-mail me at mohinbanker@gmail.com.</description>
     </item>
     
   </channel>
